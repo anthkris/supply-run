@@ -1,0 +1,244 @@
+{"frames": {
+
+"medusa.png":
+{
+	"frame": {"x":180,"y":1,"w":89,"h":98},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":71,"y":71,"w":89,"h":98},
+	"sourceSize": {"w":240,"h":240}
+},
+"medusa_attack2_001.png":
+{
+	"frame": {"x":1,"y":122,"w":86,"h":98},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":71,"y":71,"w":86,"h":98},
+	"sourceSize": {"w":240,"h":240}
+},
+"medusa_attack2_002.png":
+{
+	"frame": {"x":92,"y":301,"w":83,"h":98},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":71,"y":71,"w":83,"h":98},
+	"sourceSize": {"w":240,"h":240}
+},
+"medusa_attack2_003.png":
+{
+	"frame": {"x":271,"y":1,"w":95,"h":92},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":74,"y":77,"w":95,"h":92},
+	"sourceSize": {"w":240,"h":240}
+},
+"medusa_attack_001.png":
+{
+	"frame": {"x":1,"y":222,"w":86,"h":98},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":74,"y":71,"w":86,"h":98},
+	"sourceSize": {"w":240,"h":240}
+},
+"medusa_attack_002.png":
+{
+	"frame": {"x":86,"y":1,"w":92,"h":98},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":74,"y":71,"w":92,"h":98},
+	"sourceSize": {"w":240,"h":240}
+},
+"medusa_attack_003.png":
+{
+	"frame": {"x":368,"y":1,"w":95,"h":92},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":74,"y":77,"w":95,"h":92},
+	"sourceSize": {"w":240,"h":240}
+},
+"medusa_die_001.png":
+{
+	"frame": {"x":92,"y":401,"w":83,"h":98},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":74,"y":71,"w":83,"h":98},
+	"sourceSize": {"w":240,"h":240}
+},
+"medusa_die_002.png":
+{
+	"frame": {"x":177,"y":301,"w":83,"h":98},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":71,"y":71,"w":83,"h":98},
+	"sourceSize": {"w":240,"h":240}
+},
+"medusa_die_003.png":
+{
+	"frame": {"x":177,"y":401,"w":83,"h":98},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":71,"y":71,"w":83,"h":98},
+	"sourceSize": {"w":240,"h":240}
+},
+"medusa_die_004.png":
+{
+	"frame": {"x":265,"y":101,"w":83,"h":98},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":71,"y":71,"w":83,"h":98},
+	"sourceSize": {"w":240,"h":240}
+},
+"medusa_die_005.png":
+{
+	"frame": {"x":265,"y":201,"w":83,"h":98},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":71,"y":71,"w":83,"h":98},
+	"sourceSize": {"w":240,"h":240}
+},
+"medusa_die_006.png":
+{
+	"frame": {"x":441,"y":192,"w":86,"h":89},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":71,"y":80,"w":86,"h":89},
+	"sourceSize": {"w":240,"h":240}
+},
+"medusa_die_007.png":
+{
+	"frame": {"x":432,"y":371,"w":86,"h":77},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":71,"y":92,"w":86,"h":77},
+	"sourceSize": {"w":240,"h":240}
+},
+"medusa_die_008.png":
+{
+	"frame": {"x":432,"y":450,"w":86,"h":65},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":71,"y":104,"w":86,"h":65},
+	"sourceSize": {"w":240,"h":240}
+},
+"medusa_hit_001.png":
+{
+	"frame": {"x":262,"y":301,"w":83,"h":98},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":74,"y":71,"w":83,"h":98},
+	"sourceSize": {"w":240,"h":240}
+},
+"medusa_hit_002.png":
+{
+	"frame": {"x":262,"y":401,"w":83,"h":98},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":71,"y":71,"w":83,"h":98},
+	"sourceSize": {"w":240,"h":240}
+},
+"medusa_jump_001.png":
+{
+	"frame": {"x":350,"y":95,"w":89,"h":92},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":77,"y":77,"w":89,"h":92},
+	"sourceSize": {"w":240,"h":240}
+},
+"medusa_jump_002.png":
+{
+	"frame": {"x":350,"y":283,"w":92,"h":86},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":77,"y":83,"w":92,"h":86},
+	"sourceSize": {"w":240,"h":240}
+},
+"medusa_jump_003.png":
+{
+	"frame": {"x":350,"y":189,"w":89,"h":92},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":77,"y":77,"w":89,"h":92},
+	"sourceSize": {"w":240,"h":240}
+},
+"medusa_jump_004.png":
+{
+	"frame": {"x":1,"y":1,"w":83,"h":119},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":86,"y":56,"w":83,"h":119},
+	"sourceSize": {"w":240,"h":240}
+},
+"medusa_run_001.png":
+{
+	"frame": {"x":1,"y":322,"w":89,"h":98},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":71,"y":71,"w":89,"h":98},
+	"sourceSize": {"w":240,"h":240}
+},
+"medusa_run_002.png":
+{
+	"frame": {"x":89,"y":101,"w":86,"h":98},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":74,"y":71,"w":86,"h":98},
+	"sourceSize": {"w":240,"h":240}
+},
+"medusa_run_003.png":
+{
+	"frame": {"x":441,"y":95,"w":83,"h":95},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":77,"y":74,"w":83,"h":95},
+	"sourceSize": {"w":240,"h":240}
+},
+"medusa_run_004.png":
+{
+	"frame": {"x":89,"y":201,"w":86,"h":98},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":74,"y":71,"w":86,"h":98},
+	"sourceSize": {"w":240,"h":240}
+},
+"medusa_run_005.png":
+{
+	"frame": {"x":1,"y":422,"w":89,"h":98},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":71,"y":71,"w":89,"h":98},
+	"sourceSize": {"w":240,"h":240}
+},
+"medusa_run_006.png":
+{
+	"frame": {"x":177,"y":101,"w":86,"h":98},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":74,"y":71,"w":86,"h":98},
+	"sourceSize": {"w":240,"h":240}
+},
+"medusa_run_007.png":
+{
+	"frame": {"x":347,"y":371,"w":83,"h":95},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":77,"y":74,"w":83,"h":95},
+	"sourceSize": {"w":240,"h":240}
+},
+"medusa_run_008.png":
+{
+	"frame": {"x":177,"y":201,"w":86,"h":98},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":74,"y":71,"w":86,"h":98},
+	"sourceSize": {"w":240,"h":240}
+}},
+"meta": {
+	"app": "http://www.codeandweb.com/texturepacker",
+	"version": "1.0",
+	"image": "medusaPlayer.png",
+	"format": "RGBA8888",
+	"size": {"w":528,"h":528},
+	"scale": "1",
+	"smartupdate": "$TexturePacker:SmartUpdate:9d2d0cef5123d3ab07749c9ed44dddcd:78ff943f197a897f8adae01bb95513b3:55f4babd361c21ce12eecb7a6cfcb08b$"
+}
+}
