@@ -1,0 +1,60 @@
+{"frames": {
+
+"green_poison_001.png":
+{
+	"frame": {"x":77,"y":65,"w":74,"h":41},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":8,"y":26,"w":74,"h":41},
+	"sourceSize": {"w":96,"h":96}
+},
+"green_poison_002.png":
+{
+	"frame": {"x":1,"y":65,"w":74,"h":44},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":8,"y":26,"w":74,"h":44},
+	"sourceSize": {"w":96,"h":96}
+},
+"green_poison_003.png":
+{
+	"frame": {"x":141,"y":1,"w":59,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":23,"y":23,"w":59,"h":50},
+	"sourceSize": {"w":96,"h":96}
+},
+"green_poison_impact_001.png":
+{
+	"frame": {"x":153,"y":53,"w":47,"h":59},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":35,"y":17,"w":47,"h":59},
+	"sourceSize": {"w":96,"h":96}
+},
+"green_poison_impact_002.png":
+{
+	"frame": {"x":1,"y":1,"w":71,"h":62},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":23,"y":14,"w":71,"h":62},
+	"sourceSize": {"w":96,"h":96}
+},
+"green_poison_impact_003.png":
+{
+	"frame": {"x":74,"y":1,"w":65,"h":62},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":14,"y":14,"w":65,"h":62},
+	"sourceSize": {"w":96,"h":96}
+}},
+"meta": {
+	"app": "http://www.codeandweb.com/texturepacker",
+	"version": "1.0",
+	"image": "poison.png",
+	"format": "RGBA8888",
+	"size": {"w":201,"h":113},
+	"scale": "1",
+	"smartupdate": "$TexturePacker:SmartUpdate:2f44f5e5b3ba59b87e3ace0681f9d7f6:179039d428368a2f23bf5854e90806d5:8c968ed6c0c94345818e3769ed89b3c0$"
+}
+}

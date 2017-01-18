@@ -10,6 +10,9 @@ You're first task is simple... just collect a few items for the heroes... just a
 
 ## To Do:
 
-- Add enemies and obstacles
-- Change coins to loot
+- Add enemies
+- Add lives
+- Implement levels
+- Add levels
+- Add projectiles and kill enemies
 - Add difficulty. Go faster over time.

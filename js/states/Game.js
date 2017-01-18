@@ -2,7 +2,7 @@ var SupRun = SupRun || {};
 
 SupRun.GameState = {
 
-  init: function() {
+  init: function(level, bgSprite, lives, coins) {
     //pool of floor sprites
     this.floorPool = this.add.group();
     
@@ -17,29 +17,42 @@ SupRun.GameState = {
     this.enemiesPool = this.add.group();
     this.enemiesPool.enableBody = true;
     
+    //pool of projectives
+    this.projectilesPool = this.add.group();
+    this.projectilesPool.enableBody = true;
+    this.attackTimer = 0;
+    this.isShooting = false;
+    this.isHit = false;
+    
     //gravity
     this.game.physics.arcade.gravity.y = 1000; 
     
     //max jumping distance
-    this.maxJumpDistance = 120;
+    this.maxJumpDistance = 140;
     
     //enable cursor keys
     this.cursors = this.game.input.keyboard.createCursorKeys();
+    this.spaceKey = this.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
     
     //coin count
-    this.myCoins = 0;
+    this.myCoins = coins || 0;
     
+    //lives count
+    this.myLives = lives || 4;
+    this.maxLives = 4;
+    
+    this.bgSprite = bgSprite || 'background';
+    this.currentLevel = level || 'level1';
     //level speed
-    this.levelSpeed = 200;
+    this.levelSpeed = 400;
+    
+    //level time in seconds
+    this.levelTime = 6;
   },
   create: function() {
- 
-    //hard-code first platform
-    this.currentPlatform = new SupRun.Platform(this.game, this.floorPool, 20, 0, 600, -this.levelSpeed, this.coinsPool, this.enemiesPool);
-    this.platformPool.add(this.currentPlatform);
     
     //create moving background
-    this.background = this.add.tileSprite(0, 0, this.game.world.width, this.game.world.height, 'background');
+    this.background = this.add.tileSprite(0, 0, this.game.world.width, this.game.world.height, this.bgSprite);
     this.background.autoScroll(-this.levelSpeed/6, 0);
     this.game.world.sendToBack(this.background);
     
@@ -50,13 +63,20 @@ SupRun.GameState = {
     this.player.anchor.setTo(0.5);
     this.player.animations.add('running', Phaser.Animation.generateFrameNames('medusa_run_', 1, 8, '.png', 3), 10, true, false);
     this.player.animations.add('jumping', Phaser.Animation.generateFrameNames('medusa_jump_', 1, 4, '.png', 3), 10, false, false);
-    this.playerHitAnim = this.player.animations.add('hit', Phaser.Animation.generateFrameNames('medusa_die_', 1, 3, '.png', 3), 10, true, false);
+    this.shootAnim = this.player.animations.add('attacking', Phaser.Animation.generateFrameNames('medusa_attack2_', 1, 3, '.png', 3), 12, false, false);
+    this.playerHitAnim = this.player.animations.add('hit', Phaser.Animation.generateFrameNames('medusa_die_', 0, 3, '.png', 3), 10, true, false);
     this.game.physics.arcade.enable(this.player);
+    this.player.body.checkCollision.left = false;
+    
+    //hard-code first platform
+    this.currentPlatform = new SupRun.Platform(this.game, this.floorPool, 20, 0, 600, -this.levelSpeed, this.coinsPool, this.enemiesPool, this.player);
+    this.platformPool.add(this.currentPlatform);
     
     this.playerHitAnim.onLoop.add(this.hitAnimationLooped, this);
+    this.shootAnim.onComplete.add(this.shootAnimComplete, this);
 
     //change player bounding box
-    //this.player.body.setSize(89, 98, 70, 70);
+    this.player.body.setSize(89, 98, 70, 70);
     this.player.play('running');
     
     //create moving water
@@ -67,19 +87,23 @@ SupRun.GameState = {
     this.coinSound = this.add.audio('coin');
     this.gameOverCounter = 0;
     this.loadLevel();
+    this.canShoot = true;
     
     //show number of coins
     var style = {font: '30px Arial', fill: '#fff'};
     this.coinsCountLabel = this.add.text(10, 20, '0', style);
+    
+    //levelTimer
+    this.game.time.events.add(Phaser.Timer.SECOND * 20, this.nextLevel, this);
   },   
   update: function() {
     if (this.player.alive) {
+      this.player.x = 400;
       this.platformPool.forEachAlive(function(platform, index){
         this.game.physics.arcade.collide(this.player, platform);
         
         this.enemiesPool.forEachAlive(function(enemy, index){
           this.game.physics.arcade.collide(enemy, platform);
-          //this.game.physics.arcade.collide(enemy, this.player);
         }, this);
         
         //check if platform needs to be killed
@@ -91,19 +115,44 @@ SupRun.GameState = {
       
       this.game.physics.arcade.overlap(this.player, this.coinsPool, this.collectCoin, null, this);
       this.game.physics.arcade.overlap(this.player, this.enemiesPool, this.hurtPlayer, null, this);
-      
-      if (this.player.body.touching.down && !this.isHit) {
+      console.log(this.isJumping);
+      if (this.player.body.touching.down && !this.isHit && !this.isShooting) {
+        //if down, not hit, and not shooting
         this.player.play('running');
         this.player.body.velocity.x = this.levelSpeed;
-      }
-      else {
+        this.canShoot = true;
+      } else if (this.isHit && this.player.body.touching.down) {
+        //if hit and touching down
+        this.player.body.velocity.x = this.levelSpeed;
+        this.isHit = false;
+        this.canShoot = false;
+      } else if (this.isHit && !this.player.body.touching.down) {
+        //if hit and up in the air
+        this.isHit = false
         this.player.body.velocity.x = 0;
+        this.canShoot = false;
+      } else if (!this.player.body.touching.down){
+        //if up in the air
+        this.player.body.velocity.x = 0;
+        this.canShoot = false;
+      } else if (this.isShooting) {
+        //if shooting
+        this.player.body.velocity.x = this.levelSpeed;
+      } else {
+        this.player.play('running');
+        this.player.body.velocity.x = this.levelSpeed;
+        this.canShoot = true;
       }
       
       if(this.cursors.up.isDown || this.game.input.activePointer.isDown){
         this.playerJump();
+        this.canShoot = false;
       } else if (this.cursors.up.isUp || this.game.input.activePointer.isUp) {
         this.isJumping = false;
+      }
+      
+      if(this.spaceKey.isDown){
+        this.shoot();
       }
       
       //if the last sprite in the platform group is showing, then create a new platform
@@ -120,7 +169,7 @@ SupRun.GameState = {
       
       //kill enemies that leave the screen
       this.enemiesPool.forEachAlive(function(enemy){
-        if (enemy.right <= 0){
+        if (enemy.right <= 0 || enemy.left <= 200){
           enemy.kill();
         }
       }, this);
@@ -129,7 +178,7 @@ SupRun.GameState = {
     //check if the player needs to die
     if(this.player.top >= this.game.world.height || this.player.left <= 0) {
       //console.log(this.player.top);
-      console.log(this.player.left);
+      //console.log(this.player.left);
       //alpha doesn't work when bitmapData sprite is continuously redrawn
       //so only run gameOver once
       if(this.gameOverCounter <= 0) {
@@ -140,11 +189,11 @@ SupRun.GameState = {
     }
   },
   render: function(){
-    //this.game.debug.bodyInfo(this.player, 0, 30);
+    this.game.debug.bodyInfo(this.player, 0, 30);
     this.game.debug.body(this.player);
     this.enemiesPool.forEach(function(enemy){
       this.game.debug.body(enemy);
-      this.game.debug.bodyInfo(enemy, 0, 30);
+      //this.game.debug.bodyInfo(enemy, 0, 30);
     }, this);
   },
   playerJump: function(){
@@ -155,13 +204,14 @@ SupRun.GameState = {
       //keep track of the fact that you are jumping
       this.isJumping = true;
       this.jumpPeaked = false;
-      
-      this.player.body.velocity.y = -300;
+      this.player.body.velocity.x = 0;
+      this.player.body.velocity.y = -400;
     } else if (this.isJumping && !this.jumpPeaked){
       var distanceJumped = this.startJumpY - this.player.y;
       if (distanceJumped <= this.maxJumpDistance) {
         this.player.play('jumping');
-        this.player.body.velocity.y = -300;
+        this.player.body.velocity.x = 0;
+        this.player.body.velocity.y = -400;
       } else {
         this.jumpPeaked = true;
       }
@@ -178,10 +228,10 @@ SupRun.GameState = {
        this.currentPlatform = this.platformPool.getFirstDead();
        if (!this.currentPlatform) {
          this.currentPlatform = new SupRun.Platform(this.game, this.floorPool, nextPlatformData.numTiles, 
-                                                 this.game.world.width + nextPlatformData.separation, nextPlatformData.y, -this.levelSpeed, this.coinsPool, this.enemiesPool);
+                                                 this.game.world.width + nextPlatformData.separation, nextPlatformData.y, -this.levelSpeed, this.coinsPool, this.enemiesPool, this.player);
        } else {
          this.currentPlatform.prepare(nextPlatformData.numTiles, this.game.world.width + nextPlatformData.separation, 
-                                      nextPlatformData.y, -this.levelSpeed, this.coinsPool, this.enemiesPool);
+                                      nextPlatformData.y, -this.levelSpeed, this.coinsPool, this.enemiesPool, this.player);
        }
        
        this.platformPool.add(this.currentPlatform);
@@ -217,6 +267,15 @@ SupRun.GameState = {
     this.myCoins++;
     this.coinSound.play();
     this.coinsCountLabel.text = this.myCoins;
+  },
+  nextLevel: function(){
+    if (this.currentLevel === 'level1') {
+      this.game.state.start('Game', true, false, 'level2', 'background2', this.myLives, this.myCoins);
+    } else if (this.currentLevel === 'level2') {
+      this.game.state.start('Game', true, false, 'level3', 'background3', this.myLives, this.myCoins);
+    } else {
+      this.game.state.start('Game', true, false, 'level1', 'background', this.myLives, this.myCoins);
+    }
   },
   gameOver: function() {
     this.player.kill();
@@ -279,20 +338,53 @@ SupRun.GameState = {
   },
   hurtPlayer: function(player, enemy) {
     this.isHit = true;
+    this.canShoot = false
     enemy.play('attacking');
-    player.body.checkCollision.left = false;
-    player.body.checkCollision.right = false;
     player.play('hit');
     
     //console.log('ouch');
     //this.isHit = false;
   },
   hitAnimationLooped: function(sprite, animation) {
-     if (animation.loopCount === 1) {
-      this.isHit = false;
-      sprite.body.checkCollision.left = true;
-      sprite.body.checkCollision.right = true;
-      sprite.body.velocity.x = this.levelSpeed;
+    this.isHit = false;
+    this.canShoot = true;
+    console.log(this.isHit);
+    this.player.play('running');
+     if (animation.loopCount >= 1) {
+      
     }
+  },
+  shoot: function() {
+    if (this.canShoot) {
+      this.isShooting = true;
+        if (this.attackTimer < this.game.time.now) {
+            this.attackTimer = this.game.time.now + 500;
+            var projectile = this.projectilesPool.getFirstExists(false);
+            if (!projectile) {
+              projectile = this.projectilesPool.create(
+                  this.player.body.x + this.player.body.width  / 2,
+                  this.player.body.y + this.player.body.height / 2,
+                  'poison');
+            } else {
+              projectile.reset(
+                this.player.body.x + this.player.body.width  / 2,
+                this.player.body.y + this.player.body.height / 2,
+                'poison');
+            }
+
+            this.game.physics.arcade.enable(projectile);
+            projectile.checkWorldBounds = true;
+            projectile.outOfBoundsKill = true;
+            projectile.anchor.setTo(0.5, 0.5);
+            projectile.body.gravity.y = 0;
+            projectile.body.velocity.x = 1000;
+            this.player.play('attacking');
+            console.log(this.projectilesPool);
+        }
+    }
+  },
+  shootAnimComplete: function(sprite, animation){
+    this.isShooting = false;
+    this.player.play('running');
   }
 }

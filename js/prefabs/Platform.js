@@ -1,22 +1,22 @@
 var SupRun = SupRun || {};
 
-SupRun.Platform = function(game, floorPool, numTiles, x, y, speed, coinsPool, enemiesPool) {
+SupRun.Platform = function(game, floorPool, numTiles, x, y, speed, coinsPool, enemiesPool, player) {
   Phaser.Group.call(this, game);
   this.game = game;
   this.floorPool = floorPool;
   this.coinsPool = coinsPool;
   this.enemiesPool = enemiesPool;
+  this.player = player;
   this.tileSize = 96;
   this.enableBody = true;
-  this.prepare(numTiles, x, y, speed);
- 
+  this.prepare(numTiles, x, y, speed, player);
 };
 
 SupRun.Platform.prototype = Object.create(Phaser.Group.prototype);
 SupRun.Platform.prototype.constructor = SupRun.Platform;
 //create new method in order to reposition dead sprites as well as new sprites
 //speed passed here so that dead sprites can be revived with new speed
-SupRun.Platform.prototype.prepare = function(numTiles, x, y, speed){
+SupRun.Platform.prototype.prepare = function(numTiles, x, y, speed, player){
   this.alive = true;
   
   var i = 0;
@@ -38,7 +38,8 @@ SupRun.Platform.prototype.prepare = function(numTiles, x, y, speed){
   this.setAll('body.velocity.x', speed);
   
   this.addCoins(speed);
-  this.addEnemies(speed);
+  this.addEnemies(speed, this.player);
+  
 };
 
 SupRun.Platform.prototype.kill = function(){
@@ -68,46 +69,63 @@ SupRun.Platform.prototype.addCoins = function(speed) {
     if (hasCoin){
       var coin = this.coinsPool.getFirstExists(false);
       if (!coin){
-        coin = new Phaser.Sprite(this.game, tile.x, tile.y - coinsY, 'coin');
+        coin = new Phaser.Sprite(this.game, tile.x, tile.y - coinsY, 'coin', 'coin_001.png');
+        coin.animations.add('turning', Phaser.Animation.generateFrameNames('coin_', 1, 4, '.png', 3), 10, true, false);
         this.coinsPool.add(coin);
+        
       } else {
         coin.reset(tile.x, tile.y - coinsY);
       }
       coin.body.velocity.x = speed;
       coin.body.allowGravity = false;
+      coin.play('turning');
     }
   }, this);
 };
   
-  SupRun.Platform.prototype.addEnemies = function(speed) {
+  SupRun.Platform.prototype.addEnemies = function(speed, player) {
   //create coins in relation to tile position
-  var enemiesX = 300 + Math.random() * 500;
+  this.player = player;
+  var enemiesX = player.x + Math.random() * 2000;
   this.forEach(function(tile){
-    //5% chance of an enemy on a tile
-    hasEnemy = Math.random() <= 0.1;
+    //30% chance of an enemy on a tile
+    
+    hasEnemy = Math.random() <= 0.3;
     if (hasEnemy){
       var enemy = this.enemiesPool.getFirstExists(false);
       if (!enemy){
         //enemy = new Phaser.Sprite(this.game, 600, tile.y, 'people', 'barbarian_1_attack_001.png');
-        enemy = this.game.add.sprite(tile.x + enemiesX, 300, 'people', 'barbarian_1_attack_001.png');
-        enemy.animations.add('attacking', Phaser.Animation.generateFrameNames('barbarian_1_attack_', 1, 3, '.png', 3), 10, false, false);
-        enemy.animations.add('walking', Phaser.Animation.generateFrameNames('barbarian_1_walk_', 1, 5, '.png', 3), 10, true, false)
+        enemy = this.game.add.sprite(player.x + enemiesX, 0, 'people', 'barbarian_1_attack_001.png');
+        var enemyAttackAnim = enemy.animations.add('attacking', Phaser.Animation.generateFrameNames('barbarian_1_attack_', 1, 3, '.png', 3), 10, false, false);
+        enemy.animations.add('walking', Phaser.Animation.generateFrameNames('barbarian_1_walk_', 1, 5, '.png', 3), 15, true, false)
         this.enemiesPool.add(enemy);
+        enemyAttackAnim.onComplete.add(function(sprite, animation){
+          sprite.frameName = "barbarian_1_walk_001.png";
+        }, this);
         
+        enemy.body.velocity.x = speed;
         //walk
         enemy.play('walking');
       } else {
-        enemy.reset(tile.x + enemiesX, 300);
-        enemy.play('walking');
+        enemy.reset(player.x + enemiesX, 0);
+          var coinFlip = Math.random();
+          if (coinFlip < 0.3) {
+            enemy.play('walking');
+            enemy.body.velocity.x = speed;
+          } else {
+            enemy.animations.stop();
+            enemy.frameName = "barbarian_1_walk_001.png";
+            enemy.body.velocity.x = 0;
+          }
       }
       enemy.body.setSize(56, 90, 85, 62);
       enemy.scale.setTo(-1, 1);
-      enemy.body.velocity.x = speed;
-      //enemy.body.allowGravity = false;
-      enemy.body.gravity.x = 10;
-      enemy.body.gravity.y = 100;
-      console.log(this.enemiesPool);
       
+      enemy.body.checkCollision.left = false;
+      enemy.body.checkCollision.right= false;
+      //enemy.body.allowGravity = false;
+      //enemy.body.gravity.x = 10;
+      enemy.body.gravity.y = 100;
     }
   }, this);
 };
