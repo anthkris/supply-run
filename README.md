@@ -16,3 +16,4 @@ You're first task is simple... just collect a few items for the heroes... just a
 - Add levels
 - Add projectiles and kill enemies
 - Add difficulty. Go faster over time.
+- Organize code for better readability and maintenance

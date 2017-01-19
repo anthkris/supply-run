@@ -44,7 +44,7 @@ SupRun.GameState = {
     this.bgSprite = bgSprite || 'background';
     this.currentLevel = level || 'level1';
     //level speed
-    this.levelSpeed = 400;
+    this.levelSpeed = 200;
     
     //level time in seconds
     this.levelTime = 6;
@@ -62,7 +62,7 @@ SupRun.GameState = {
     //this.player = this.add.sprite(50, 50, 'player');
     this.player.anchor.setTo(0.5);
     this.player.animations.add('running', Phaser.Animation.generateFrameNames('medusa_run_', 1, 8, '.png', 3), 10, true, false);
-    this.player.animations.add('jumping', Phaser.Animation.generateFrameNames('medusa_jump_', 1, 4, '.png', 3), 10, false, false);
+    this.playerJumpAnim = this.player.animations.add('jumping', Phaser.Animation.generateFrameNames('medusa_jump_', 1, 4, '.png', 3), 12, false, false);
     this.shootAnim = this.player.animations.add('attacking', Phaser.Animation.generateFrameNames('medusa_attack2_', 1, 3, '.png', 3), 12, false, false);
     this.playerHitAnim = this.player.animations.add('hit', Phaser.Animation.generateFrameNames('medusa_die_', 0, 3, '.png', 3), 10, true, false);
     this.game.physics.arcade.enable(this.player);
@@ -71,7 +71,7 @@ SupRun.GameState = {
     //hard-code first platform
     this.currentPlatform = new SupRun.Platform(this.game, this.floorPool, 20, 0, 600, -this.levelSpeed, this.coinsPool, this.enemiesPool, this.player);
     this.platformPool.add(this.currentPlatform);
-    
+    this.playerJumpAnim.onComplete.add(this.jumpAnimComplete, this);
     this.playerHitAnim.onLoop.add(this.hitAnimationLooped, this);
     this.shootAnim.onComplete.add(this.shootAnimComplete, this);
 
@@ -94,7 +94,7 @@ SupRun.GameState = {
     this.coinsCountLabel = this.add.text(10, 20, '0', style);
     
     //levelTimer
-    this.game.time.events.add(Phaser.Timer.SECOND * 20, this.nextLevel, this);
+    this.game.time.events.add(Phaser.Timer.SECOND * 60, this.nextLevel, this);
   },   
   update: function() {
     if (this.player.alive) {
@@ -106,6 +106,10 @@ SupRun.GameState = {
           this.game.physics.arcade.collide(enemy, platform);
         }, this);
         
+        this.projectilesPool.forEachAlive(function(projectile, index){
+          this.game.physics.arcade.collide(this.player, projectile);
+        }, this);
+        
         //check if platform needs to be killed
         if(platform.length && platform.children[platform.length - 1].right < 0) {
           platform.kill();
@@ -115,34 +119,40 @@ SupRun.GameState = {
       
       this.game.physics.arcade.overlap(this.player, this.coinsPool, this.collectCoin, null, this);
       this.game.physics.arcade.overlap(this.player, this.enemiesPool, this.hurtPlayer, null, this);
-      console.log(this.isJumping);
+      this.game.physics.arcade.overlap(this.enemiesPool, this.projectilesPool, this.killEnemy, null, this);
+      //console.log(this.isJumping);
       if (this.player.body.touching.down && !this.isHit && !this.isShooting) {
         //if down, not hit, and not shooting
         this.player.play('running');
         this.player.body.velocity.x = this.levelSpeed;
         this.canShoot = true;
-      } else if (this.isHit && this.player.body.touching.down) {
+      } 
+      
+      if (this.isHit && this.player.body.touching.down) {
         //if hit and touching down
         this.player.body.velocity.x = this.levelSpeed;
         this.isHit = false;
         this.canShoot = false;
-      } else if (this.isHit && !this.player.body.touching.down) {
+      } 
+      if (this.isHit && !this.player.body.touching.down) {
         //if hit and up in the air
         this.isHit = false
         this.player.body.velocity.x = 0;
         this.canShoot = false;
-      } else if (!this.player.body.touching.down){
+      } 
+      if (!this.player.body.touching.down){
         //if up in the air
         this.player.body.velocity.x = 0;
         this.canShoot = false;
-      } else if (this.isShooting) {
-        //if shooting
-        this.player.body.velocity.x = this.levelSpeed;
       } else {
-        this.player.play('running');
         this.player.body.velocity.x = this.levelSpeed;
         this.canShoot = true;
       }
+      if (this.isShooting) {
+        //if shooting
+        this.player.body.velocity.x = this.levelSpeed;
+        this.isShooting = false;
+      } 
       
       if(this.cursors.up.isDown || this.game.input.activePointer.isDown){
         this.playerJump();
@@ -200,9 +210,9 @@ SupRun.GameState = {
     if(this.player.body.touching.down) {
       //starting point of the jump
       this.startJumpY = this.player.y;
-      this.player.play('jumping');
       //keep track of the fact that you are jumping
       this.isJumping = true;
+      this.player.play('jumping');
       this.jumpPeaked = false;
       this.player.body.velocity.x = 0;
       this.player.body.velocity.y = -400;
@@ -348,7 +358,7 @@ SupRun.GameState = {
   hitAnimationLooped: function(sprite, animation) {
     this.isHit = false;
     this.canShoot = true;
-    console.log(this.isHit);
+    //console.log(this.isHit);
     this.player.play('running');
      if (animation.loopCount >= 1) {
       
@@ -358,7 +368,7 @@ SupRun.GameState = {
     if (this.canShoot) {
       this.isShooting = true;
         if (this.attackTimer < this.game.time.now) {
-            this.attackTimer = this.game.time.now + 500;
+            this.attackTimer = this.game.time.now + 200;
             var projectile = this.projectilesPool.getFirstExists(false);
             if (!projectile) {
               projectile = this.projectilesPool.create(
@@ -376,15 +386,23 @@ SupRun.GameState = {
             projectile.checkWorldBounds = true;
             projectile.outOfBoundsKill = true;
             projectile.anchor.setTo(0.5, 0.5);
+            projectile.body.setSize(74, 44, 30, 10);
             projectile.body.gravity.y = 0;
             projectile.body.velocity.x = 1000;
             this.player.play('attacking');
-            console.log(this.projectilesPool);
+            //console.log(this.projectilesPool);
         }
     }
   },
   shootAnimComplete: function(sprite, animation){
     this.isShooting = false;
     this.player.play('running');
+  },
+  jumpAnimComplete: function(sprite, animation){
+      //this.player.frameName = "medusa_run_001.png";
+  },
+  killEnemy: function(enemy, projectile) {
+      enemy.kill();
+      projectile.kill();
   }
 }

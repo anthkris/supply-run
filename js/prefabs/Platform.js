@@ -86,18 +86,18 @@ SupRun.Platform.prototype.addCoins = function(speed) {
   SupRun.Platform.prototype.addEnemies = function(speed, player) {
   //create coins in relation to tile position
   this.player = player;
-  var enemiesX = player.x + Math.random() * 2000;
+  var enemiesX = player.x + Math.random() * 1000;
   this.forEach(function(tile){
     //30% chance of an enemy on a tile
+    hasEnemy = Math.random() <= 0.5;
     
-    hasEnemy = Math.random() <= 0.3;
     if (hasEnemy){
       var enemy = this.enemiesPool.getFirstExists(false);
       if (!enemy){
         //enemy = new Phaser.Sprite(this.game, 600, tile.y, 'people', 'barbarian_1_attack_001.png');
-        enemy = this.game.add.sprite(player.x + enemiesX, 0, 'people', 'barbarian_1_attack_001.png');
+        enemy = this.game.add.sprite(tile.x + enemiesX, 0, 'people', 'barbarian_1_attack_001.png');
         var enemyAttackAnim = enemy.animations.add('attacking', Phaser.Animation.generateFrameNames('barbarian_1_attack_', 1, 3, '.png', 3), 10, false, false);
-        enemy.animations.add('walking', Phaser.Animation.generateFrameNames('barbarian_1_walk_', 1, 5, '.png', 3), 15, true, false)
+        enemy.animations.add('walking', Phaser.Animation.generateFrameNames('barbarian_1_walk_', 1, 5, '.png', 3), 15, true, false);
         this.enemiesPool.add(enemy);
         enemyAttackAnim.onComplete.add(function(sprite, animation){
           sprite.frameName = "barbarian_1_walk_001.png";
@@ -107,9 +107,9 @@ SupRun.Platform.prototype.addCoins = function(speed) {
         //walk
         enemy.play('walking');
       } else {
-        enemy.reset(player.x + enemiesX, 0);
+        enemy.reset(tile.x + enemiesX, 0);
           var coinFlip = Math.random();
-          if (coinFlip < 0.3) {
+          if (coinFlip < 0.2) {
             enemy.play('walking');
             enemy.body.velocity.x = speed;
           } else {
