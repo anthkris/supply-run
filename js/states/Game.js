@@ -295,7 +295,7 @@ SupRun.GameState = {
     data.y = this.currentPlatform.children[0].y + minDifY + Math.random() * (maxDifY - minDifY);
     console.log(this.currentPlatform.children[0].y);
     //set absolute max and min for platforms to overwrite random gen, if necessary
-    data.y = Math.max(188, data.y);
+    data.y = Math.max(470, data.y);
     data.y = Math.min(this.game.world.height - 288, data.y);
     
     //number of tiles
