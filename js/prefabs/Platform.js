@@ -9,6 +9,7 @@ SupRun.Platform = function(game, floorPool, numTiles, x, y, speed, coinsPool, en
   this.player = player;
   this.tileSize = 96;
   this.enableBody = true;
+  this.speed = speed;
   this.prepare(numTiles, x, y, speed, player);
 };
 
@@ -17,6 +18,7 @@ SupRun.Platform.prototype.constructor = SupRun.Platform;
 //create new method in order to reposition dead sprites as well as new sprites
 //speed passed here so that dead sprites can be revived with new speed
 SupRun.Platform.prototype.prepare = function(numTiles, x, y, speed, player){
+  //console.log(speed);
   this.alive = true;
   
   var i = 0;
@@ -38,9 +40,13 @@ SupRun.Platform.prototype.prepare = function(numTiles, x, y, speed, player){
   this.setAll('body.velocity.x', speed);
   
   this.addCoins(speed);
-  this.addEnemies(speed, this.player);
+  //this.addEnemies(speed, this.player);
   
 };
+
+SupRun.Platform.prototype.update = function() {
+  
+}
 
 SupRun.Platform.prototype.kill = function(){
   this.alive = false;
@@ -85,10 +91,11 @@ SupRun.Platform.prototype.addCoins = function(speed) {
   
   SupRun.Platform.prototype.addEnemies = function(speed, player) {
   //create coins in relation to tile position
+  
   this.player = player;
-  var enemiesX = player.x + Math.random() * 1000;
+  var enemiesX = Math.random() * 500;
   this.forEach(function(tile){
-    //30% chance of an enemy on a tile
+    //50% chance of an enemy on a tile
     hasEnemy = Math.random() <= 0.5;
     
     if (hasEnemy){
