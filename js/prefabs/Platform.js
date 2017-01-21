@@ -1,6 +1,6 @@
 var SupRun = SupRun || {};
 
-SupRun.Platform = function(game, floorPool, numTiles, x, y, speed, coinsPool, enemiesPool, player) {
+SupRun.Platform = function(game, floorPool, numTiles, x, y, speed, coinsPool, enemiesPool, player, firstPlatform) {
   Phaser.Group.call(this, game);
   this.game = game;
   this.floorPool = floorPool;
@@ -10,6 +10,7 @@ SupRun.Platform = function(game, floorPool, numTiles, x, y, speed, coinsPool, en
   this.tileSize = 96;
   this.enableBody = true;
   this.speed = speed;
+  this.firstPlatform = firstPlatform;
   this.prepare(numTiles, x, y, speed, player);
 };
 
@@ -40,7 +41,7 @@ SupRun.Platform.prototype.prepare = function(numTiles, x, y, speed, player){
   this.setAll('body.velocity.x', speed);
   
   this.addCoins(speed);
-  //this.addEnemies(speed, this.player);
+  this.addEnemies(speed, this.player);
   
 };
 
@@ -94,45 +95,47 @@ SupRun.Platform.prototype.addCoins = function(speed) {
   
   this.player = player;
   var enemiesX = Math.random() * 500;
-  this.forEach(function(tile){
-    //50% chance of an enemy on a tile
-    hasEnemy = Math.random() <= 0.5;
-    
-    if (hasEnemy){
-      var enemy = this.enemiesPool.getFirstExists(false);
-      if (!enemy){
-        //enemy = new Phaser.Sprite(this.game, 600, tile.y, 'people', 'barbarian_1_attack_001.png');
-        enemy = this.game.add.sprite(tile.x + enemiesX, 0, 'people', 'barbarian_1_attack_001.png');
-        var enemyAttackAnim = enemy.animations.add('attacking', Phaser.Animation.generateFrameNames('barbarian_1_attack_', 1, 3, '.png', 3), 10, false, false);
-        enemy.animations.add('walking', Phaser.Animation.generateFrameNames('barbarian_1_walk_', 1, 5, '.png', 3), 15, true, false);
-        this.enemiesPool.add(enemy);
-        enemyAttackAnim.onComplete.add(function(sprite, animation){
-          sprite.frameName = "barbarian_1_walk_001.png";
-        }, this);
-        
-        enemy.body.velocity.x = speed;
-        //walk
-        enemy.play('walking');
-      } else {
-        enemy.reset(tile.x + enemiesX, 0);
-          var coinFlip = Math.random();
-          if (coinFlip < 0.2) {
-            enemy.play('walking');
-            enemy.body.velocity.x = speed;
-          } else {
-            enemy.animations.stop();
-            enemy.frameName = "barbarian_1_walk_001.png";
-            enemy.body.velocity.x = 0;
-          }
-      }
-      enemy.body.setSize(56, 90, 85, 62);
-      enemy.scale.setTo(-1, 1);
+  if (!this.firstPlatform) {
+    this.forEach(function(tile){
+      //50% chance of an enemy on a tile
+      hasEnemy = Math.random() <= 0.5;
       
-      enemy.body.checkCollision.left = false;
-      enemy.body.checkCollision.right= false;
-      //enemy.body.allowGravity = false;
-      //enemy.body.gravity.x = 10;
-      enemy.body.gravity.y = 100;
-    }
-  }, this);
+      if (hasEnemy){
+        var enemy = this.enemiesPool.getFirstExists(false);
+        if (!enemy){
+          //enemy = new Phaser.Sprite(this.game, 600, tile.y, 'people', 'barbarian_1_attack_001.png');
+          enemy = this.game.add.sprite(tile.x + enemiesX, 0, 'people', 'barbarian_1_attack_001.png');
+          var enemyAttackAnim = enemy.animations.add('attacking', Phaser.Animation.generateFrameNames('barbarian_1_attack_', 1, 3, '.png', 3), 10, false, false);
+          enemy.animations.add('walking', Phaser.Animation.generateFrameNames('barbarian_1_walk_', 1, 5, '.png', 3), 15, true, false);
+          this.enemiesPool.add(enemy);
+          enemyAttackAnim.onComplete.add(function(sprite, animation){
+            sprite.frameName = "barbarian_1_walk_001.png";
+          }, this);
+          
+          enemy.body.velocity.x = speed;
+          //walk
+          enemy.play('walking');
+        } else {
+          enemy.reset(tile.x + enemiesX, 0);
+            var coinFlip = Math.random();
+            if (coinFlip < 0.2) {
+              enemy.play('walking');
+              enemy.body.velocity.x = speed;
+            } else {
+              enemy.animations.stop();
+              enemy.frameName = "barbarian_1_walk_001.png";
+              enemy.body.velocity.x = 0;
+            }
+        }
+        enemy.body.setSize(56, 90, 85, 62);
+        enemy.scale.setTo(-1, 1);
+        
+        enemy.body.checkCollision.left = false;
+        enemy.body.checkCollision.right= false;
+        //enemy.body.allowGravity = false;
+        //enemy.body.gravity.x = 10;
+        enemy.body.gravity.y = 100;
+      }
+    }, this);
+  }
 };

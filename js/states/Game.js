@@ -90,7 +90,7 @@ SupRun.GameState = {
 
     /* PLATFORMS */
     //hard-code first platform
-    this.currentPlatform = new SupRun.Platform(this.game, this.floorPool, 20, 0, 600, -this.levelSpeed, this.coinsPool, this.enemiesPool, this.player);
+    this.currentPlatform = new SupRun.Platform(this.game, this.floorPool, 20, 0, 600, -this.levelSpeed, this.coinsPool, this.enemiesPool, this.player, true);
     this.platformPool.add(this.currentPlatform);
     
     /* LOAD LEVEL */  
@@ -230,10 +230,10 @@ SupRun.GameState = {
        this.currentPlatform = this.platformPool.getFirstDead();
        if (!this.currentPlatform) {
          this.currentPlatform = new SupRun.Platform(this.game, this.floorPool, nextPlatformData.numTiles, 
-                                                 this.game.world.width + nextPlatformData.separation, nextPlatformData.y, -this.levelSpeed, this.coinsPool, this.enemiesPool, this.player);
+                                                 this.game.world.width + nextPlatformData.separation, nextPlatformData.y, -this.levelSpeed, this.coinsPool, this.enemiesPool, this.player, false);
        } else {
          this.currentPlatform.prepare(nextPlatformData.numTiles, this.game.world.width + nextPlatformData.separation, 
-                                      nextPlatformData.y, -this.levelSpeed, this.coinsPool, this.enemiesPool, this.player);
+                                      nextPlatformData.y, -this.levelSpeed, this.coinsPool, this.enemiesPool, this.player, false);
        }
        
        this.platformPool.add(this.currentPlatform);
