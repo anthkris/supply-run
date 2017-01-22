@@ -2,7 +2,7 @@ var SupRun = SupRun || {};
 
 SupRun.GameState = {
 
-  init: function(level, bgSprite, lives, coins) {
+  init: function(level, bgSprite, enemySprite, lives, coins) {
 
     /* OBJECT POOLS */
     //pool of floor sprites
@@ -40,6 +40,7 @@ SupRun.GameState = {
     /* LEVEL VARIABLES */
     this.currentLevel = level || 'level1';
     this.bgSprite = bgSprite || 'background';
+    this.enemySprite = enemySprite || 'knight_';
     this.levelSpeed = 200;
     this.playerSpeed = 200;
 
@@ -90,7 +91,7 @@ SupRun.GameState = {
 
     /* PLATFORMS */
     //hard-code first platform
-    this.currentPlatform = new SupRun.Platform(this.game, this.floorPool, 20, 0, 600, -this.levelSpeed, this.coinsPool, this.enemiesPool, this.player, true);
+    this.currentPlatform = new SupRun.Platform(this.game, this.floorPool, 20, 0, 600, -this.levelSpeed, this.coinsPool, this.enemiesPool, this.enemySprite, this.player, true);
     this.platformPool.add(this.currentPlatform);
     
     /* LOAD LEVEL */  
@@ -103,11 +104,11 @@ SupRun.GameState = {
     this.coinsCountLabel = this.add.text(10, 20, '0', style);
     
     /* LEVEL TIMER */
-    //this.game.time.events.add(Phaser.Timer.SECOND * 30, this.nextLevel, this);
-    //this.goFasterTime = 2000;
-    //this.levelTimer = this.game.time.create(false);
-    //this.levelTimer.loop(this.goFasterTime, this.goFaster, this);
-    //this.levelTimer.start();
+    this.game.time.events.add(Phaser.Timer.SECOND * 20, this.nextLevel, this);
+    // this.goFasterTime = 2000;
+    // this.levelTimer = this.game.time.create(false);
+    // this.levelTimer.loop(this.goFasterTime, this.goFaster, this);
+    // this.levelTimer.start();
   },   
   update: function() {
     /* COLLISION WITH POOLS */
@@ -158,7 +159,7 @@ SupRun.GameState = {
       if (!this.player.body.touching.down){
         //if up in the air
         this.player.body.velocity.x = 0;
-        this.canShoot = false;
+        this.canShoot = true;
       } else {
         this.player.body.velocity.x = this.levelSpeed;
         this.canShoot = true;
@@ -203,6 +204,13 @@ SupRun.GameState = {
     
     }
     
+    /* ALLOW ENEMIES TO REMAIN ON PLATFORMS AFTER DEATH  */
+    this.platformPool.forEachAlive(function(platform, index){
+        this.enemiesPool.forEachAlive(function(enemy, index){
+          this.game.physics.arcade.collide(enemy, platform);
+        }, this);
+      }, this);
+    
     /* CHECK IF PLAYER NEEDS TO DIE */
     if(this.player.top >= this.game.world.height || this.player.left <= 0) {
       //console.log(this.player.top);
@@ -230,10 +238,10 @@ SupRun.GameState = {
        this.currentPlatform = this.platformPool.getFirstDead();
        if (!this.currentPlatform) {
          this.currentPlatform = new SupRun.Platform(this.game, this.floorPool, nextPlatformData.numTiles, 
-                                                 this.game.world.width + nextPlatformData.separation, nextPlatformData.y, -this.levelSpeed, this.coinsPool, this.enemiesPool, this.player, false);
+                                                 this.game.world.width + nextPlatformData.separation, nextPlatformData.y, -this.levelSpeed, this.coinsPool, this.enemiesPool, this.enemySprite, this.player, false);
        } else {
          this.currentPlatform.prepare(nextPlatformData.numTiles, this.game.world.width + nextPlatformData.separation, 
-                                      nextPlatformData.y, -this.levelSpeed, this.coinsPool, this.enemiesPool, this.player, false);
+                                      nextPlatformData.y, -this.levelSpeed, this.coinsPool, this.enemiesPool, this.enemySprite, this.player, false);
        }
        
        this.platformPool.add(this.currentPlatform);
@@ -293,16 +301,16 @@ SupRun.GameState = {
     var maxDifY = 120;
     //data.y = 900;
     data.y = this.currentPlatform.children[0].y + minDifY + Math.random() * (maxDifY - minDifY);
-    console.log(this.currentPlatform.children[0].y);
+    //console.log(this.currentPlatform.children[0].y);
     //set absolute max and min for platforms to overwrite random gen, if necessary
     data.y = Math.max(470, data.y);
     data.y = Math.min(this.game.world.height - 288, data.y);
     
     //number of tiles
-    var minTiles = 5;
-    var maxTiles = 10;
+    var minTiles = 7;
+    var maxTiles = 15;
     data.numTiles = minTiles + Math.random() * (maxTiles - minTiles);
-    console.log(data);
+    //console.log(data);
     return data;
   },
   goFaster: function(){
@@ -340,11 +348,11 @@ SupRun.GameState = {
   },
   nextLevel: function(){
     if (this.currentLevel === 'level1') {
-      this.game.state.start('Game', true, false, 'level2', 'background2', this.myLives, this.myCoins);
+      this.game.state.start('Game', true, false, 'level2', 'background2', 'dwarf_1_', this.myLives, this.myCoins);
     } else if (this.currentLevel === 'level2') {
-      this.game.state.start('Game', true, false, 'level3', 'background3', this.myLives, this.myCoins);
+      this.game.state.start('Game', true, false, 'level3', 'background3', 'barbarian_1_', this.myLives, this.myCoins);
     } else {
-      this.game.state.start('Game', true, false, 'level1', 'background', this.myLives, this.myCoins);
+      this.game.state.start('Game', true, false, 'level1', 'background', 'knight_', this.myLives, this.myCoins);
     }
     //this.levelTimer.destroy();
   },

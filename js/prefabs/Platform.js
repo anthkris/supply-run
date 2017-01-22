@@ -1,11 +1,12 @@
 var SupRun = SupRun || {};
 
-SupRun.Platform = function(game, floorPool, numTiles, x, y, speed, coinsPool, enemiesPool, player, firstPlatform) {
+SupRun.Platform = function(game, floorPool, numTiles, x, y, speed, coinsPool, enemiesPool, enemySprite, player, firstPlatform) {
   Phaser.Group.call(this, game);
   this.game = game;
   this.floorPool = floorPool;
   this.coinsPool = coinsPool;
   this.enemiesPool = enemiesPool;
+  this.enemySprite = enemySprite;
   this.player = player;
   this.tileSize = 96;
   this.enableBody = true;
@@ -46,7 +47,11 @@ SupRun.Platform.prototype.prepare = function(numTiles, x, y, speed, player){
 };
 
 SupRun.Platform.prototype.update = function() {
-  
+  this.enemiesPool.forEachAlive(function(enemy){
+    if (enemy.x <= this.player.x + 700) {
+      this.enemyMove(enemy, enemy.checked);
+    }
+  }, this);
 }
 
 SupRun.Platform.prototype.kill = function(){
@@ -90,52 +95,73 @@ SupRun.Platform.prototype.addCoins = function(speed) {
   }, this);
 };
   
-  SupRun.Platform.prototype.addEnemies = function(speed, player) {
+SupRun.Platform.prototype.addEnemies = function(speed, player) {
   //create coins in relation to tile position
   
   this.player = player;
-  var enemiesX = Math.random() * 500;
+  var enemiesX = Math.random();
+  var coinFlip = Math.floor(Math.random() * (1 - 0 + 1)) + 0;
   if (!this.firstPlatform) {
     this.forEach(function(tile){
-      //50% chance of an enemy on a tile
-      hasEnemy = Math.random() <= 0.5;
+      //40% chance of an enemy on a tile
+      hasEnemy = Math.random() <= 0.4;
       
       if (hasEnemy){
         var enemy = this.enemiesPool.getFirstExists(false);
+        
         if (!enemy){
           //enemy = new Phaser.Sprite(this.game, 600, tile.y, 'people', 'barbarian_1_attack_001.png');
-          enemy = this.game.add.sprite(tile.x + enemiesX, 0, 'people', 'barbarian_1_attack_001.png');
-          var enemyAttackAnim = enemy.animations.add('attacking', Phaser.Animation.generateFrameNames('barbarian_1_attack_', 1, 3, '.png', 3), 10, false, false);
-          enemy.animations.add('walking', Phaser.Animation.generateFrameNames('barbarian_1_walk_', 1, 5, '.png', 3), 15, true, false);
+          enemy = this.game.add.sprite(tile.x + enemiesX, 400, 'people', this.enemySprite + 'attack_001.png');
+          enemy.checked = false;
+          var enemyAttackAnim = enemy.animations.add('attacking', Phaser.Animation.generateFrameNames(this.enemySprite + 'attack_', 1, 3, '.png', 3), 10, false, false);
+          enemy.animations.add('walking', Phaser.Animation.generateFrameNames(this.enemySprite + 'walk_', 1, 5, '.png', 3), 10, true, false);
           this.enemiesPool.add(enemy);
           enemyAttackAnim.onComplete.add(function(sprite, animation){
-            sprite.frameName = "barbarian_1_walk_001.png";
+            sprite.frameName = this.enemySprite + "walk_001.png";
           }, this);
-          
-          enemy.body.velocity.x = speed;
-          //walk
-          enemy.play('walking');
+          enemy.frameName = this.enemySprite + "walk_001.png"
+          enemy.body.velocity.x = 0;
+          enemy.scale.setTo(-1, 1);
         } else {
-          enemy.reset(tile.x + enemiesX, 0);
-            var coinFlip = Math.random();
-            if (coinFlip < 0.2) {
-              enemy.play('walking');
-              enemy.body.velocity.x = speed;
-            } else {
-              enemy.animations.stop();
-              enemy.frameName = "barbarian_1_walk_001.png";
-              enemy.body.velocity.x = 0;
-            }
+          enemy.reset(tile.x + enemiesX, 400);
+          enemy.checked = false;
         }
+        enemy.direction = coinFlip === 0 ? 1 : -1;
         enemy.body.setSize(56, 90, 85, 62);
-        enemy.scale.setTo(-1, 1);
-        
+        enemy.anchor.setTo(0.5);
         enemy.body.checkCollision.left = false;
         enemy.body.checkCollision.right= false;
         //enemy.body.allowGravity = false;
         //enemy.body.gravity.x = 10;
-        enemy.body.gravity.y = 100;
+        enemy.body.gravity.y = 1000;
       }
     }, this);
   }
 };
+
+SupRun.Platform.prototype.enemyMove = function(enemy, checked) {
+  if (!checked) {
+    var coinFlip = Math.floor(Math.random() * (1 - 0 + 1)) + 0; 
+    //console.log(coinFlip)
+    //console.log(enemy.direction);
+    if (coinFlip === 0) {
+      if (enemy.direction === 1) {
+        console.log('walking left');
+        enemy.scale.setTo(-1, 1);
+        enemy.body.velocity.x = this.speed;
+        enemy.play('walking');
+      } else {
+        console.log('walking right');
+        enemy.scale.setTo(1, 1);
+        enemy.body.velocity.x = -this.speed;
+        enemy.play('walking');
+      }
+      
+    } else {
+      enemy.animations.stop();
+      enemy.frameName = this.enemySprite + "walk_001.png";
+      enemy.body.velocity.x = 0;
+    }
+    enemy.checked = true;
+  }
+}
