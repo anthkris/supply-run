@@ -47,6 +47,7 @@ SupRun.Platform.prototype.prepare = function(numTiles, x, y, speed, player){
 };
 
 SupRun.Platform.prototype.update = function() {
+  //Check distance of player from enemy
   this.enemiesPool.forEachAlive(function(enemy){
     if (enemy.x <= this.player.x + 700) {
       this.enemyMove(enemy, enemy.checked);
@@ -96,7 +97,7 @@ SupRun.Platform.prototype.addCoins = function(speed) {
 };
   
 SupRun.Platform.prototype.addEnemies = function(speed, player) {
-  //create coins in relation to tile position
+  //create enemies in relation to tile position
   
   this.player = player;
   var enemiesX = Math.random();
@@ -110,7 +111,6 @@ SupRun.Platform.prototype.addEnemies = function(speed, player) {
         var enemy = this.enemiesPool.getFirstExists(false);
         
         if (!enemy){
-          //enemy = new Phaser.Sprite(this.game, 600, tile.y, 'people', 'barbarian_1_attack_001.png');
           enemy = this.game.add.sprite(tile.x + enemiesX, 400, 'people', this.enemySprite + 'attack_001.png');
           enemy.checked = false;
           var enemyAttackAnim = enemy.animations.add('attacking', Phaser.Animation.generateFrameNames(this.enemySprite + 'attack_', 1, 3, '.png', 3), 10, false, false);
@@ -144,6 +144,7 @@ SupRun.Platform.prototype.enemyMove = function(enemy, checked) {
     var coinFlip = Math.floor(Math.random() * (1 - 0 + 1)) + 0; 
     //console.log(coinFlip)
     //console.log(enemy.direction);
+    //Choose whether or not enemy should move, and if so, in what direction
     if (coinFlip === 0) {
       if (enemy.direction === 1) {
         console.log('walking left');
