@@ -19,7 +19,7 @@ SupRun.Platform.prototype = Object.create(Phaser.Group.prototype);
 SupRun.Platform.prototype.constructor = SupRun.Platform;
 //create new method in order to reposition dead sprites as well as new sprites
 //speed passed here so that dead sprites can be revived with new speed
-SupRun.Platform.prototype.prepare = function(numTiles, x, y, speed, player){
+SupRun.Platform.prototype.prepare = function(numTiles, x, y, speed, player) {
   //console.log(speed);
   this.alive = true;
   
@@ -32,11 +32,13 @@ SupRun.Platform.prototype.prepare = function(numTiles, x, y, speed, player){
     } else {
       floorTile.reset(x + i * this.tileSize, y);
     }
+    //floorTile.body.checkCollision.left = true;
     this.add(floorTile);
     
     i++;
   }
   //set physics properties
+  this.setAll('body.checkCollision.left', true);
   this.setAll('body.immovable', true);
   this.setAll('body.allowGravity', false);
   this.setAll('body.velocity.x', speed);
@@ -48,14 +50,15 @@ SupRun.Platform.prototype.prepare = function(numTiles, x, y, speed, player){
 
 SupRun.Platform.prototype.update = function() {
   //Check distance of player from enemy
-  this.enemiesPool.forEachAlive(function(enemy){
+  this.enemiesPool.forEachAlive(function(enemy) {
+    //console.log('checking player distance');
     if (enemy.x <= this.player.x + 700) {
       this.enemyMove(enemy, enemy.checked);
     }
   }, this);
 }
 
-SupRun.Platform.prototype.kill = function(){
+SupRun.Platform.prototype.kill = function() {
   this.alive = false;
   //call the kill method on each individual sprite in the group
   this.callAll('kill');
@@ -129,11 +132,12 @@ SupRun.Platform.prototype.addEnemies = function(speed, player) {
         enemy.direction = coinFlip === 0 ? 1 : -1;
         enemy.body.setSize(56, 90, 85, 62);
         enemy.anchor.setTo(0.5);
-        enemy.body.checkCollision.left = false;
-        enemy.body.checkCollision.right= false;
+        //console.log(enemy.body);
+        //enemy.body.checkCollision.left = false;
+        //enemy.body.checkCollision.right= false;
         //enemy.body.allowGravity = false;
         //enemy.body.gravity.x = 10;
-        enemy.body.gravity.y = 1000;
+        enemy.body.gravity.y = 5000;
       }
     }, this);
   }
@@ -147,12 +151,12 @@ SupRun.Platform.prototype.enemyMove = function(enemy, checked) {
     //Choose whether or not enemy should move, and if so, in what direction
     if (coinFlip === 0) {
       if (enemy.direction === 1) {
-        console.log('walking left');
+        //console.log('walking left');
         enemy.scale.setTo(-1, 1);
         enemy.body.velocity.x = this.speed;
         enemy.play('walking');
       } else {
-        console.log('walking right');
+        //console.log('walking right');
         enemy.scale.setTo(1, 1);
         enemy.body.velocity.x = -this.speed;
         enemy.play('walking');
@@ -165,4 +169,4 @@ SupRun.Platform.prototype.enemyMove = function(enemy, checked) {
     }
     enemy.checked = true;
   }
-}
+};
