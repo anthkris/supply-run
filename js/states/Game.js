@@ -7,7 +7,6 @@ SupRun.GameState = {
     /* OBJECT POOLS */
     //pool of floor sprites
     this.floorPool = this.add.group();
-    //this.floorPool.enableBody = true;
     
     //pool of platforms
     this.platformPool = this.add.group();
@@ -75,7 +74,8 @@ SupRun.GameState = {
     this.player.animations.add('running', Phaser.Animation.generateFrameNames('medusa_run_', 1, 8, '.png', 3), 10, true, false);
     this.playerJumpAnim = this.player.animations.add('jumping', Phaser.Animation.generateFrameNames('medusa_jump_', 1, 4, '.png', 3), 12, false, false);
     this.shootAnim = this.player.animations.add('attacking', Phaser.Animation.generateFrameNames('medusa_attack2_', 1, 3, '.png', 3), 12, false, false);
-    this.playerHitAnim = this.player.animations.add('hit', Phaser.Animation.generateFrameNames('medusa_die_', 0, 3, '.png', 3), 10, true, false);
+    this.playerHitAnim = this.player.animations.add('hit', Phaser.Animation.generateFrameNames('medusa_die_', 1, 3, '.png', 3), 10, true, false);
+    this.playerDieAnim = this.player.animations.add('dying', Phaser.Animation.generateFrameNames('medusa_die_', 1, 8, '.png', 3), 10, false, false);
     this.playerJumpAnim.onComplete.add(this.jumpAnimComplete, this);
     this.playerHitAnim.onLoop.add(this.hitAnimationLooped, this);
     this.shootAnim.onComplete.add(this.shootAnimComplete, this); 
@@ -83,7 +83,7 @@ SupRun.GameState = {
     //player physics
     this.game.physics.arcade.enable(this.player);
     this.player.body.setSize(89, 98, 70, 70); //change player bounding box
-    this.player.body.checkCollision.left = false;
+    //this.player.body.checkCollision.left = false;
     
     //play running animation
     this.player.play('running');
@@ -117,8 +117,6 @@ SupRun.GameState = {
       this.player.x = 400;
       this.platformPool.forEachAlive(function(platform, index) {
         
-        this.game.physics.arcade.collide(this.player, platform);
-        
         this.enemiesPool.forEachAlive(function(enemy, index){
           this.game.physics.arcade.collide(enemy, platform);
         }, this);
@@ -129,6 +127,7 @@ SupRun.GameState = {
         
         // update floor tile speed constantly
         platform.forEachAlive(function(floor) {
+          this.game.physics.arcade.collide(this.player, floor, this.hitWall, null, this);
           floor.body.velocity.x = -this.levelSpeed;
         }, this);
         
@@ -328,10 +327,10 @@ SupRun.GameState = {
   },
   goFaster: function(){
     if (this.levelTimer.ms >= this.goFasterTime) {
-          console.log('speed it up!');
-          this.levelSpeed += 60;
-          this.goFasterTime += 5000;
-        }
+      console.log('speed it up!');
+      this.levelSpeed += 60;
+      this.goFasterTime += 5000;
+    }
   },
   hitAnimationLooped: function(sprite, animation) {
     this.isHit = false;
@@ -341,6 +340,15 @@ SupRun.GameState = {
      if (animation.loopCount >= 1) {
       
     }
+  },
+  hitWall: function(player, floor) {
+    
+    if (floor.body.touching.left) {
+      console.log('hit floor');
+      player.play('dying');
+      player.body.gravity.y = 10000;
+    }
+    
   },
   hurtPlayer: function(player, enemy) {
     this.isHit = true;
@@ -390,8 +398,17 @@ SupRun.GameState = {
     }
   },
   render: function(){
-    this.game.debug.bodyInfo(this.player, 0, 30);
+    
     this.game.debug.body(this.player);
+    this.platformPool.forEach(function(platform){
+      
+      platform.forEach(function(floor) {
+        this.game.debug.bodyInfo(floor, 0, 30);
+        this.game.debug.body(floor);
+        
+      }, this);
+      
+    }, this);
     this.enemiesPool.forEach(function(enemy){
     this.game.debug.body(enemy);
     //this.game.debug.bodyInfo(enemy, 0, 30);

@@ -32,11 +32,13 @@ SupRun.Platform.prototype.prepare = function(numTiles, x, y, speed, player) {
     } else {
       floorTile.reset(x + i * this.tileSize, y);
     }
+    //floorTile.body.checkCollision.left = true;
     this.add(floorTile);
     
     i++;
   }
   //set physics properties
+  this.setAll('body.checkCollision.left', true);
   this.setAll('body.immovable', true);
   this.setAll('body.allowGravity', false);
   this.setAll('body.velocity.x', speed);
@@ -130,8 +132,9 @@ SupRun.Platform.prototype.addEnemies = function(speed, player) {
         enemy.direction = coinFlip === 0 ? 1 : -1;
         enemy.body.setSize(56, 90, 85, 62);
         enemy.anchor.setTo(0.5);
-        enemy.body.checkCollision.left = false;
-        enemy.body.checkCollision.right= false;
+        //console.log(enemy.body);
+        //enemy.body.checkCollision.left = false;
+        //enemy.body.checkCollision.right= false;
         //enemy.body.allowGravity = false;
         //enemy.body.gravity.x = 10;
         enemy.body.gravity.y = 5000;
