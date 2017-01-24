@@ -133,8 +133,8 @@ SupRun.Platform.prototype.addEnemies = function(speed, player) {
         enemy.body.setSize(56, 90, 85, 62);
         enemy.anchor.setTo(0.5);
         //console.log(enemy.body);
-        //enemy.body.checkCollision.left = false;
-        //enemy.body.checkCollision.right= false;
+        enemy.body.checkCollision.left = false;
+        enemy.body.checkCollision.right= false;
         //enemy.body.allowGravity = false;
         //enemy.body.gravity.x = 10;
         enemy.body.gravity.y = 5000;

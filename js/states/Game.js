@@ -83,11 +83,17 @@ SupRun.GameState = {
     //player physics
     this.game.physics.arcade.enable(this.player);
     this.player.body.setSize(89, 98, 70, 70); //change player bounding box
-    //this.player.body.checkCollision.left = false;
+    this.player.body.checkCollision.left = false;
     
     //play running animation
     this.player.play('running');
-
+    
+    /* LIVES */
+    this.life1 = this.game.add.sprite(200, 20, 'heart');
+    this.life2 = this.game.add.sprite(20, 20, 'heart').alignTo(this.life1, Phaser.RIGHT_CENTER, -10);
+    this.life3 = this.game.add.sprite(20, 20, 'heart').alignTo(this.life2, Phaser.RIGHT_CENTER, -10);
+    this.life4 = this.game.add.sprite(20, 20, 'heart').alignTo(this.life3, Phaser.RIGHT_CENTER, -10);
+    
     /* PLATFORMS */
     //hard-code first platform
     this.currentPlatform = new SupRun.Platform(this.game, this.floorPool, 20, 0, 600, -this.levelSpeed, this.coinsPool, this.enemiesPool, this.enemySprite, this.player, true);
@@ -100,7 +106,8 @@ SupRun.GameState = {
     this.coinSound = this.add.audio('coin');
     //show number of coins
     var style = {font: '30px Arial', fill: '#fff'};
-    this.coinsCountLabel = this.add.text(10, 20, '0', style);
+    this.coinsCountIcon = this.game.add.sprite(22, 20, 'coin');
+    this.coinsCountLabel = this.add.text(80, 20, '0', style).alignTo(this.coinsCountIcon, Phaser.RIGHT_CENTER, 20);
     
     /* LEVEL TIMER */
     this.game.time.events.add(Phaser.Timer.SECOND * 60, this.nextLevel, this);
@@ -116,7 +123,7 @@ SupRun.GameState = {
       
       this.player.x = 400;
       this.platformPool.forEachAlive(function(platform, index) {
-        
+        this.game.physics.arcade.collide(this.player, platform);
         this.enemiesPool.forEachAlive(function(enemy, index){
           this.game.physics.arcade.collide(enemy, platform);
         }, this);
@@ -127,7 +134,7 @@ SupRun.GameState = {
         
         // update floor tile speed constantly
         platform.forEachAlive(function(floor) {
-          this.game.physics.arcade.collide(this.player, floor, this.hitWall, null, this);
+          //this.game.physics.arcade.collide(this.player, floor, this.hitWall, null, this);
           floor.body.velocity.x = -this.levelSpeed;
         }, this);
         
@@ -259,6 +266,23 @@ SupRun.GameState = {
        this.currIndex++;
      }
   },
+  destroyHeart: function() {
+    switch(this.myLives) {
+      case 4:
+        this.life4.destroy();
+        break;
+      case 3:
+        this.life3.destroy();
+        break;
+      case 2:
+        this.life2.destroy();
+        break;
+      case 1:
+        this.life1.destroy();
+        break;
+    }
+    this.myLives--;
+  },
   gameOver: function() {
     this.player.kill();
     this.updateHighScore();
@@ -355,6 +379,7 @@ SupRun.GameState = {
     this.canShoot = false
     enemy.play('attacking');
     player.play('hit');
+    this.destroyHeart();
   },
   jumpAnimComplete: function(sprite, animation){
       //this.player.frameName = "medusa_run_001.png";
@@ -399,20 +424,20 @@ SupRun.GameState = {
   },
   render: function(){
     
-    this.game.debug.body(this.player);
-    this.platformPool.forEach(function(platform){
+    // this.game.debug.body(this.player);
+    // this.platformPool.forEach(function(platform){
       
-      platform.forEach(function(floor) {
-        this.game.debug.bodyInfo(floor, 0, 30);
-        this.game.debug.body(floor);
+    //   platform.forEach(function(floor) {
+    //     this.game.debug.bodyInfo(floor, 0, 30);
+    //     this.game.debug.body(floor);
         
-      }, this);
+    //   }, this);
       
-    }, this);
-    this.enemiesPool.forEach(function(enemy){
-    this.game.debug.body(enemy);
-    //this.game.debug.bodyInfo(enemy, 0, 30);
-    }, this);
+    // }, this);
+    // this.enemiesPool.forEach(function(enemy){
+    // this.game.debug.body(enemy);
+    // //this.game.debug.bodyInfo(enemy, 0, 30);
+    // }, this);
   },
   restart: function() {
     this.game.state.start('Game', true, false, this.currentLevel, 200, this.bgSprite, this.enemySprite, this.myLives, this.myCoins);
