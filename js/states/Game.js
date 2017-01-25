@@ -69,6 +69,7 @@ SupRun.GameState = {
     /* PLAYER */
     this.player = this.game.add.sprite(400, 300, 'player', 'medusa.png');
     this.player.anchor.setTo(0.5);
+    this.hitCounter = 0;
    
     //player animations
     this.player.animations.add('running', Phaser.Animation.generateFrameNames('medusa_run_', 1, 8, '.png', 3), 10, true, false);
@@ -76,6 +77,7 @@ SupRun.GameState = {
     this.shootAnim = this.player.animations.add('attacking', Phaser.Animation.generateFrameNames('medusa_attack2_', 1, 3, '.png', 3), 12, false, false);
     this.playerHitAnim = this.player.animations.add('hit', Phaser.Animation.generateFrameNames('medusa_die_', 1, 3, '.png', 3), 10, true, false);
     this.playerDieAnim = this.player.animations.add('dying', Phaser.Animation.generateFrameNames('medusa_die_', 1, 8, '.png', 3), 10, false, false);
+    this.playerDieAnim.onComplete.add(this.dieAnimComplete, this);
     this.playerJumpAnim.onComplete.add(this.jumpAnimComplete, this);
     this.playerHitAnim.onLoop.add(this.hitAnimationLooped, this);
     this.shootAnim.onComplete.add(this.shootAnimComplete, this); 
@@ -122,9 +124,10 @@ SupRun.GameState = {
     if (this.player.alive) {
       
       this.player.x = 400;
+      this.checkEnemyOverlap();
       this.platformPool.forEachAlive(function(platform, index) {
         this.game.physics.arcade.collide(this.player, platform);
-        this.enemiesPool.forEachAlive(function(enemy, index){
+        this.enemiesPool.forEachAlive(function(enemy, index) {
           this.game.physics.arcade.collide(enemy, platform);
         }, this);
         
@@ -163,6 +166,7 @@ SupRun.GameState = {
         this.player.body.velocity.x = this.levelSpeed;
         //console.log(this.player.body.velocity.x);
         this.canShoot = true;
+        this.hitCounter = 0;
       } 
       if (this.isHit && this.player.body.touching.down) {
         //if hit and touching down
@@ -232,15 +236,24 @@ SupRun.GameState = {
       }, this);
     
     /* CHECK IF PLAYER NEEDS TO DIE */
-    if(this.player.top >= this.game.world.height || this.player.left <= 0) {
+    if(this.player.top >= this.game.world.height || this.player.left <= 0 || this.myLives <= 0) {
       //alpha doesn't work when bitmapData sprite is continuously redrawn
       //so only run gameOver once
+      this.player.play('dying');
       if(this.gameOverCounter <= 0) {
         this.gameOver();
         this.gameOverCounter++;
       }
       
     }
+  },
+  checkEnemyOverlap: function() {
+    this.whence = this.game.time.now;
+    // Mark sprites that are currently overlapping
+    this.game.physics.arcade.overlap(this.player, this.enemiesPool, function(r, s){
+        console.log("is overlap");
+        s.overlapToken = this.whence;
+    });
   },
   collectCoin: function(player, coin) {
     //kill coin, update coin count, and play sound
@@ -266,22 +279,26 @@ SupRun.GameState = {
        this.currIndex++;
      }
   },
-  destroyHeart: function() {
-    switch(this.myLives) {
-      case 4:
-        this.life4.destroy();
-        break;
-      case 3:
-        this.life3.destroy();
-        break;
-      case 2:
-        this.life2.destroy();
-        break;
-      case 1:
-        this.life1.destroy();
-        break;
-    }
-    this.myLives--;
+  destroyHeart: function(player, enemy) {
+    console.log(this.hitCounter);
+      switch(this.myLives) {
+        case 4:
+          this.life4.destroy();
+          break;
+        case 3:
+          this.life3.destroy();
+          break;
+        case 2:
+          this.life2.destroy();
+          break;
+        case 1:
+          this.life1.destroy();
+          break;
+      }
+      this.myLives--;
+  },
+  dieAnimComplete: function() {
+    this.player.frameName = 'medusa_die_008.png';
   },
   gameOver: function() {
     this.player.kill();
@@ -359,14 +376,12 @@ SupRun.GameState = {
   hitAnimationLooped: function(sprite, animation) {
     this.isHit = false;
     this.canShoot = true;
-    //console.log(this.isHit);
     this.player.play('running');
      if (animation.loopCount >= 1) {
       
     }
   },
   hitWall: function(player, floor) {
-    
     if (floor.body.touching.left) {
       console.log('hit floor');
       player.play('dying');
@@ -375,11 +390,16 @@ SupRun.GameState = {
     
   },
   hurtPlayer: function(player, enemy) {
+    console.log(this.hitCounter);
     this.isHit = true;
     this.canShoot = false
     enemy.play('attacking');
     player.play('hit');
-    this.destroyHeart();
+    if (this.hitCounter <= 0) {
+      this.destroyHeart();
+    }
+    this.hitCounter++;
+    
   },
   jumpAnimComplete: function(sprite, animation){
       //this.player.frameName = "medusa_run_001.png";
@@ -401,7 +421,7 @@ SupRun.GameState = {
       this.game.state.start('Game', true, false, 'level1', this.levelSpeed, 'background', 'knight_', this.myLives, this.myCoins);
     }
   },
-  playerJump: function(){
+  playerJump: function() {
     if(this.player.body.touching.down) {
       //starting point of the jump
       this.startJumpY = this.player.y;

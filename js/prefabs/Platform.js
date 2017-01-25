@@ -103,17 +103,17 @@ SupRun.Platform.prototype.addEnemies = function(speed, player) {
   //create enemies in relation to tile position
   
   this.player = player;
-  var enemiesX = Math.random();
+  var enemiesX = Math.floor(Math.random() * (700 - 200 + 1)) + 200;
   var coinFlip = Math.floor(Math.random() * (1 - 0 + 1)) + 0;
   if (!this.firstPlatform) {
-    this.forEach(function(tile){
+    this.forEach(function(tile) {
       //40% chance of an enemy on a tile
       hasEnemy = Math.random() <= 0.4;
       
-      if (hasEnemy){
+      if (hasEnemy) {
         var enemy = this.enemiesPool.getFirstExists(false);
         
-        if (!enemy){
+        if (!enemy) {
           enemy = this.game.add.sprite(tile.x + enemiesX, 400, 'people', this.enemySprite + 'attack_001.png');
           enemy.checked = false;
           var enemyAttackAnim = enemy.animations.add('attacking', Phaser.Animation.generateFrameNames(this.enemySprite + 'attack_', 1, 3, '.png', 3), 10, false, false);
