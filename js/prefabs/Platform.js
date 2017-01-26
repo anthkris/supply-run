@@ -1,10 +1,11 @@
 var SupRun = SupRun || {};
 
-SupRun.Platform = function(game, floorPool, numTiles, x, y, speed, coinsPool, enemiesPool, enemySprite, player, firstPlatform) {
+SupRun.Platform = function(game, floorPool, numTiles, x, y, speed, coinsPool, enemiesPool, lifePool, enemySprite, player, firstPlatform) {
   Phaser.Group.call(this, game);
   this.game = game;
   this.floorPool = floorPool;
   this.coinsPool = coinsPool;
+  this.lifePool = lifePool;
   this.enemiesPool = enemiesPool;
   this.enemySprite = enemySprite;
   this.player = player;
@@ -38,13 +39,13 @@ SupRun.Platform.prototype.prepare = function(numTiles, x, y, speed, player) {
     i++;
   }
   //set physics properties
-  this.setAll('body.checkCollision.left', true);
   this.setAll('body.immovable', true);
   this.setAll('body.allowGravity', false);
   this.setAll('body.velocity.x', speed);
   
   this.addCoins(speed);
   this.addEnemies(speed, this.player);
+  this.addLifeUps(speed);
   
 };
 
@@ -128,13 +129,16 @@ SupRun.Platform.prototype.addEnemies = function(speed, player) {
         } else {
           enemy.reset(tile.x + enemiesX, 400);
           enemy.checked = false;
+          enemy.animations.stop();
+          enemy.body.velocity.x = 0;
+          enemy.frameName = this.enemySprite + "walk_001.png"
         }
         enemy.direction = coinFlip === 0 ? 1 : -1;
         enemy.body.setSize(56, 90, 85, 62);
         enemy.anchor.setTo(0.5);
         //console.log(enemy.body);
-        enemy.body.checkCollision.left = false;
-        enemy.body.checkCollision.right= false;
+        //enemy.body.checkCollision.left = false;
+        //enemy.body.checkCollision.right= false;
         //enemy.body.allowGravity = false;
         //enemy.body.gravity.x = 10;
         enemy.body.gravity.y = 5000;
@@ -170,3 +174,26 @@ SupRun.Platform.prototype.enemyMove = function(enemy, checked) {
     enemy.checked = true;
   }
 };
+
+SupRun.Platform.prototype.addLifeUps = function(speed) {
+  //create coins in relation to tile position
+  var lifeUpY = 90 + Math.random() * 110;
+  var hasLifeUp;
+  this.forEach(function(tile) {
+    //1% chance of a coin
+    hasLifeUp = Math.random() <= 0.01;
+    if (hasLifeUp) {
+      var lifeUp = this.lifePool.getFirstExists(false);
+      if (!lifeUp) {
+        lifeUp = new Phaser.Sprite(this.game, tile.x, tile.y - lifeUpY, 'heart');
+        this.lifePool.add(lifeUp);
+        
+      } else {
+        lifeUp.reset(tile.x, tile.y - lifeUpY);
+      }
+      lifeUp.body.velocity.x = speed;
+      lifeUp.body.allowGravity = false;
+    }
+  }, this);
+};
+  
