@@ -118,20 +118,20 @@ SupRun.Platform.prototype.addEnemies = function(speed, player) {
           enemy = this.game.add.sprite(tile.x + enemiesX, 400, 'people', this.enemySprite + 'attack_001.png');
           enemy.checked = false;
           var enemyAttackAnim = enemy.animations.add('attacking', Phaser.Animation.generateFrameNames(this.enemySprite + 'attack_', 1, 3, '.png', 3), 10, false, false);
-          enemy.animations.add('walking', Phaser.Animation.generateFrameNames(this.enemySprite + 'walk_', 1, 5, '.png', 3), 10, true, false);
+          enemy.animations.add('walking', Phaser.Animation.generateFrameNames(this.enemySprite + 'walk_', 1, 5, '.png', 3), 15, true, false);
           this.enemiesPool.add(enemy);
           enemyAttackAnim.onComplete.add(function(sprite, animation){
             sprite.frameName = this.enemySprite + "walk_001.png";
           }, this);
-          enemy.frameName = this.enemySprite + "walk_001.png"
-          enemy.body.velocity.x = 0;
+          enemy.frameName = this.enemySprite + "walk_001.png";
+          //enemy.body.velocity.x = 0;
           enemy.scale.setTo(-1, 1);
         } else {
           enemy.reset(tile.x + enemiesX, 400);
           enemy.checked = false;
           enemy.animations.stop();
-          enemy.body.velocity.x = 0;
-          enemy.frameName = this.enemySprite + "walk_001.png"
+          //enemy.body.velocity.x = 0;
+          enemy.frameName = this.enemySprite + "walk_001.png";
         }
         enemy.direction = coinFlip === 0 ? 1 : -1;
         enemy.body.setSize(56, 90, 85, 62);

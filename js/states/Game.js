@@ -3,7 +3,6 @@ var SupRun = SupRun || {};
 SupRun.GameState = {
 
   init: function(level, levelSpeed, bgSprite, enemySprite, lives, coins) {
-
     /* OBJECT POOLS */
     //pool of floor sprites
     this.floorPool = this.add.group();
@@ -72,7 +71,6 @@ SupRun.GameState = {
     /* PLAYER */
     this.player = this.game.add.sprite(400, 300, 'player', 'medusa.png');
     this.player.anchor.setTo(0.5);
-
     this.PLAYER_GHOST_TIME = 1000;
    
     //player animations
@@ -89,8 +87,7 @@ SupRun.GameState = {
     //player physics
     this.game.physics.arcade.enable(this.player);
     this.player.body.setSize(89, 98, 70, 70); //change player bounding box
-    //this.player.body.checkCollision.left = false;
-    
+
     //play running animation
     this.player.play('running');
     
@@ -122,27 +119,22 @@ SupRun.GameState = {
     
     /* LEVEL TIMER */
     this.nextLevelTimer = this.game.time.events.add(Phaser.Timer.SECOND * 20, this.nextLevel, this);
-    this.goFasterTime = 10000;
     this.speedUpTimer = this.game.time.create(false);
-    this.speedUpTimer.loop(this.goFasterTime, this.goFaster, this);
+    this.speedUpTimer.loop(1500, this.goFaster, this);
     this.speedUpTimer.start();
+    
+    this.game.camera.flash(0xffffff, 1000);
   },   
   update: function() {
     
     /* COLLISION WITH POOLS */
     if (this.player.alive) {
-      console.log(this.player.x);
-
-      //this.checkEnemyOverlap();
+      //this.player.x = 400;
       this.platformPool.forEachAlive(function(platform, index) {
         this.game.physics.arcade.collide(this.player, platform, this.hitWall, null, this);
         this.enemiesPool.forEachAlive(function(enemy, index) {
           this.game.physics.arcade.collide(enemy, platform);
         }, this);
-        
-        // this.projectilesPool.forEachAlive(function(projectile, index) {
-        //   this.game.physics.arcade.collide(this.player, projectile);
-        // }, this);
         
         // update floor tile speed constantly
         platform.forEach(function(floor) {
@@ -157,7 +149,7 @@ SupRun.GameState = {
       
       // update coin and life sprite speed constantly
       this.coinsPool.forEachAlive(function(coin) {
-          coin.body.velocity.x = -this.levelSpeed;
+         coin.body.velocity.x = -this.levelSpeed;
       }, this);
       
       this.lifePool.forEachAlive(function(life) {
@@ -179,9 +171,14 @@ SupRun.GameState = {
       }
       
       if (!this.player.body.touching.down) {
+        this.player.body.velocity.x = 0;
+      }
+      
+      if (!this.player.body.touching.down && this.isJumping) {
         //if up in the air
         //console.log('player is in the air');
-        this.player.body.velocity.x = 0;
+        
+        //this.player.x = 400;
         this.canShoot = true;
       }
       
@@ -203,6 +200,7 @@ SupRun.GameState = {
 
       /* PLATFORM CREATION */
       //if the last sprite in the platform group is showing, then create a new platform
+      //console.log(this.currentPlatform.children);
       if(this.currentPlatform.length && this.currentPlatform.children[this.currentPlatform.length - 1].right < this.game.world.width) {
         this.createPlatform();
       }
@@ -258,10 +256,10 @@ SupRun.GameState = {
     if (this.myLivesLeft < this.maxLives) {
       if (this.myLivesLeft<=3) {
         this.playerLives.create(this.playerLives.getChildAt(this.myLivesLeft - 1).x + 86, this.playerLives.getChildAt(this.myLivesLeft - 1).y, 'heart');
-        //this.playerLives.align(-1, 1, 86, 96, Phaser.RIGHT_CENTER, 0);
       }
       this.myLivesLeft++;
     }
+    console.log(this.myLivesLeft);
   },
   createPlatform: function(){
     var nextPlatformData = this.generateRandomPlatform();
@@ -351,10 +349,10 @@ SupRun.GameState = {
     return data;
   },
   goFaster: function(){
+    console.log('speed it up!');
+      this.levelSpeed += 10;
     if (this.speedUpTimer.ms >= this.goFasterTime) {
-      console.log('speed it up!');
-      this.levelSpeed += 20;
-      this.goFasterTime = this.game.time.now + 1500;
+      
     }
   },
   hitAnimationLooped: function(sprite, animation) {
@@ -415,6 +413,7 @@ SupRun.GameState = {
   },
   nextLevel: function() {
     //console.log(this.levelSpeed);
+    
     if (this.currentLevel === 'level1') {
       this.game.state.start('Game', true, false, 'level2', this.levelSpeed, 'background2', 'dwarf_1_', this.myLivesLeft, this.myCoins);
     } else if (this.currentLevel === 'level2') {
@@ -422,7 +421,6 @@ SupRun.GameState = {
     } else {
       this.game.state.start('Game', true, false, 'level1', this.levelSpeed, 'background', 'knight_', this.myLivesLeft, this.myCoins);
     }
-    this.speedUpTimer.destroy();
   },
   playerJump: function() {
     if(this.player.body.touching.down) {
