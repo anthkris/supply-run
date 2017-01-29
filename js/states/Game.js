@@ -42,7 +42,8 @@ SupRun.GameState = {
     this.currentLevel = level || 'level1';
     this.bgSprite = bgSprite || 'background';
     this.enemySprite = enemySprite || 'knight_';
-    this.levelSpeed = levelSpeed || 300;
+    this.levelSpeed = levelSpeed || 700;
+    this.maxLevelSpeed = 800;
 
     /* GAME COLLECTIBLES */
     
@@ -119,9 +120,9 @@ SupRun.GameState = {
     
     /* LEVEL TIMER */
     this.nextLevelTimer = this.game.time.events.add(Phaser.Timer.SECOND * 20, this.nextLevel, this);
-    this.speedUpTimer = this.game.time.create(false);
-    this.speedUpTimer.loop(1500, this.goFaster, this);
-    this.speedUpTimer.start();
+    // this.speedUpTimer = this.game.time.create(false);
+    // this.speedUpTimer.loop(1500, this.goFaster, this);
+    // this.speedUpTimer.start();
     
     this.game.camera.flash(0xffffff, 1000);
   },   
@@ -129,15 +130,17 @@ SupRun.GameState = {
     
     /* COLLISION WITH POOLS */
     if (this.player.alive) {
-      //this.player.x = 400;
+      console.log(this.player.x);
       this.platformPool.forEachAlive(function(platform, index) {
         this.game.physics.arcade.collide(this.player, platform, this.hitWall, null, this);
+      
         this.enemiesPool.forEachAlive(function(enemy, index) {
           this.game.physics.arcade.collide(enemy, platform);
         }, this);
         
         // update floor tile speed constantly
         platform.forEach(function(floor) {
+          
           floor.body.velocity.x = -this.levelSpeed;
         }, this);
         
@@ -149,30 +152,38 @@ SupRun.GameState = {
       
       // update coin and life sprite speed constantly
       this.coinsPool.forEachAlive(function(coin) {
-         coin.body.velocity.x = -this.levelSpeed;
+        this.checkCoinOverlap(this.player, coin);
+        coin.body.velocity.x = -this.levelSpeed;
       }, this);
       
       this.lifePool.forEachAlive(function(life) {
-          life.body.velocity.x = -this.levelSpeed;
+        this.checkLifeOverlap(this.player, life);
+        life.body.velocity.x = -this.levelSpeed;
       }, this);
       
-      this.game.physics.arcade.overlap(this.player, this.coinsPool, this.collectCoin, null, this);
-      this.game.physics.arcade.overlap(this.player, this.lifePool, this.collectLife, null, this);
-      this.game.physics.arcade.overlap(this.player, this.enemiesPool, this.hurtPlayer, null, this);
+      //this.game.physics.arcade.overlap(this.player, this.coinsPool, this.collectCoin, null, this);
+      //this.game.physics.arcade.overlap(this.player, this.lifePool, this.collectLife, null, this);
+      //this.game.physics.arcade.overlap(this.player, this.enemiesPool, this.hurtPlayer, null, this);
       this.game.physics.arcade.collide(this.enemiesPool, this.projectilesPool, this.killEnemy, null, this);
       
       
       this.processDelayedEffects();
       
-      /* CHECK PLAYER BOOLEANS */
-      if (this.player.body.touching.down && !this.isHit && !this.isShooting) {
-        this.player.play('running');
-        this.player.body.velocity.x = this.levelSpeed;
+      /* ADJUST PLAYER POSITION */
+      if (!this.player.body.touching.down) {
+          this.player.body.velocity.x = 0;
       }
       
-      if (!this.player.body.touching.down) {
-        this.player.body.velocity.x = 0;
+      if (this.player.body.touching.down && !this.isHit && !this.isShooting) {
+        this.isJumping = false;
+        this.player.play('running');
+        this.player.body.velocity.x = this.levelSpeed;
+        //this.player.x = 400;
       }
+      
+      /* CHECK PLAYER BOOLEANS */
+      
+      
       
       if (!this.player.body.touching.down && this.isJumping) {
         //if up in the air
@@ -185,6 +196,7 @@ SupRun.GameState = {
       if (this.isShooting && this.player.body.touching.down) {
         //if shooting
         this.isShooting = false;
+        this.isJumping = false;
         this.player.body.velocity.x = this.levelSpeed;
       } 
       
@@ -207,15 +219,15 @@ SupRun.GameState = {
       
       /* KILL SWITCH */
       //kill coins that leave the screen
-      this.coinsPool.forEachAlive(function(coin){
-        if (coin.right <= 0){
+      this.coinsPool.forEachAlive(function(coin) {
+        if (coin.right <= 0) {
           coin.kill();
         }
       }, this);
       
       //kill enemies that leave the screen
-      this.enemiesPool.forEachAlive(function(enemy){
-        if (enemy.right <= 0 || enemy.left <= 200){
+      this.enemiesPool.forEachAlive(function(enemy) {
+        if (enemy.right <= 0 || enemy.left <= 200 || enemy.top >= this.game.world.height ) {
           enemy.kill();
         }
       }, this);
@@ -235,13 +247,23 @@ SupRun.GameState = {
       //so only run gameOver once
       this.player.play('dying');
       this.playerLives.destroy(true, true);
-      this.speedUpTimer.destroy();
+      //this.speedUpTimer.destroy();
       this.nextLevelTimer.timer.destroy();
       if(this.gameOverCounter <= 0) {
         this.gameOver();
         this.gameOverCounter++;
       }
       
+    }
+  },
+  checkCoinOverlap (player, coin) {
+    if (player.x >= coin.left) {
+      this.collectCoin(player, coin);
+    }
+  },
+  checkLifeOverlap (player, life) {
+    if (player.x >= life.left) {
+      this.collectLife(player, life);
     }
   },
   collectCoin: function(player, coin) {
@@ -252,14 +274,15 @@ SupRun.GameState = {
     this.coinsCountLabel.text = this.myCoins;
   },
   collectLife: function(player, life) {
+    console.log(this.myLivesLeft);
     life.kill();
     if (this.myLivesLeft < this.maxLives) {
-      if (this.myLivesLeft<=3) {
-        this.playerLives.create(this.playerLives.getChildAt(this.myLivesLeft - 1).x + 86, this.playerLives.getChildAt(this.myLivesLeft - 1).y, 'heart');
-      }
+      this.playerLives.create(this.playerLives.getChildAt(this.myLivesLeft - 1).x + 86, this.playerLives.getChildAt(this.myLivesLeft - 1).y, 'heart');
       this.myLivesLeft++;
+      console.log("gained a life! Now at " + this.myLivesLeft);
+    } else {
+      console.log("reached max lives");
     }
-    console.log(this.myLivesLeft);
   },
   createPlatform: function(){
     var nextPlatformData = this.generateRandomPlatform();
@@ -348,12 +371,15 @@ SupRun.GameState = {
     //console.log(data);
     return data;
   },
-  goFaster: function(){
-    console.log('speed it up!');
+  goFaster: function() {
+    
+    if (this.levelSpeed < this.maxLevelSpeed) {
+      console.log('speed it up!');
       this.levelSpeed += 10;
-    if (this.speedUpTimer.ms >= this.goFasterTime) {
-      
     }
+    // if (this.speedUpTimer.ms >= this.goFasterTime) {
+      
+    // }
   },
   hitAnimationLooped: function(sprite, animation) {
     this.isHit = false;
@@ -378,9 +404,9 @@ SupRun.GameState = {
     //Taken from here: https://leanpub.com/html5shootemupinanafternoon/read#leanpub-auto-player-lives
     // check first if this.ghostUntil is not not undefined or null 
     //console.log(enemy.body.touching);
+    enemy.play('attacking');
+    player.play('hit');
     if (enemy.body.touching.left && !enemy.body.touching.up) {
-      enemy.play('attacking');
-      player.play('hit');
       this.canShoot = false;
       if (this.ghostUntil && this.ghostUntil > this.time.now) {
         return;
@@ -391,8 +417,10 @@ SupRun.GameState = {
     
       var life = this.playerLives.getChildAt(this.myLivesLeft - 1);
       if (life !== null) { 
-        life.kill();
+        
+        life.destroy();
         this.myLivesLeft--;
+        console.log("lost a life! Now at " + this.myLivesLeft);
       }
     } else if (enemy.body.touching.up) {
       enemy.kill();
@@ -455,7 +483,8 @@ SupRun.GameState = {
   },
   render: function() {
     
-    // this.game.debug.body(this.player);
+    //this.game.debug.body(this.player);
+    this.game.debug.bodyInfo(this.player, 0, 30);
     // this.platformPool.forEach(function(platform){
       
     //   platform.forEach(function(floor) {
@@ -471,7 +500,7 @@ SupRun.GameState = {
     // }, this);
   },
   restart: function() {
-    this.game.state.start('Game', true, false, '', 200, '', '', this.maxLives, 0);
+    this.game.state.start('Game', true, false, '', 700, '', '', this.maxLives, 0);
   },
   shoot: function() {
     if (this.canShoot) {

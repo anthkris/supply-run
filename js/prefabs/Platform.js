@@ -53,8 +53,8 @@ SupRun.Platform.prototype.update = function() {
   //Check distance of player from enemy
   this.enemiesPool.forEachAlive(function(enemy) {
     //console.log('checking player distance');
-    if (enemy.x <= this.player.x + 700) {
-      this.enemyMove(enemy, enemy.checked);
+    if (enemy.x <= this.player.x + 700 && !enemy.checked) {
+      this.enemyMove(enemy, enemy.checked, this.speed);
     }
   }, this);
 }
@@ -147,7 +147,7 @@ SupRun.Platform.prototype.addEnemies = function(speed, player) {
   }
 };
 
-SupRun.Platform.prototype.enemyMove = function(enemy, checked) {
+SupRun.Platform.prototype.enemyMove = function(enemy, checked, speed) {
   if (!checked) {
     var coinFlip = Math.floor(Math.random() * (1 - 0 + 1)) + 0; 
     //console.log(coinFlip)
@@ -157,19 +157,19 @@ SupRun.Platform.prototype.enemyMove = function(enemy, checked) {
       if (enemy.direction === 1) {
         //console.log('walking left');
         enemy.scale.setTo(-1, 1);
-        enemy.body.velocity.x = this.speed;
+        enemy.body.velocity.x = speed;
         enemy.play('walking');
       } else {
         //console.log('walking right');
         enemy.scale.setTo(1, 1);
-        enemy.body.velocity.x = -this.speed;
+        enemy.body.velocity.x = -speed;
         enemy.play('walking');
       }
       
     } else {
       enemy.animations.stop();
       enemy.frameName = this.enemySprite + "walk_001.png";
-      enemy.body.velocity.x = 0;
+      //enemy.body.velocity.x = 0;
     }
     enemy.checked = true;
   }
