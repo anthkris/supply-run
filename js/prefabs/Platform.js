@@ -21,7 +21,7 @@ SupRun.Platform.prototype.constructor = SupRun.Platform;
 //create new method in order to reposition dead sprites as well as new sprites
 //speed passed here so that dead sprites can be revived with new speed
 SupRun.Platform.prototype.prepare = function(numTiles, x, y, speed, player) {
-  //console.log(speed);
+  //console.log(x);
   this.alive = true;
   
   var i = 0;
@@ -41,7 +41,8 @@ SupRun.Platform.prototype.prepare = function(numTiles, x, y, speed, player) {
   //set physics properties
   this.setAll('body.immovable', true);
   this.setAll('body.allowGravity', false);
-  this.setAll('body.velocity.x', speed);
+  //this.setAll('checkWorldBounds', true);
+  //this.setAll('body.velocity.x', speed);
   
   this.addCoins(speed);
   this.addEnemies(speed, this.player);
@@ -93,7 +94,7 @@ SupRun.Platform.prototype.addCoins = function(speed) {
       } else {
         coin.reset(tile.x, tile.y - coinsY);
       }
-      coin.body.velocity.x = speed;
+      //coin.body.velocity.x = speed;
       coin.body.allowGravity = false;
       coin.play('turning');
     }
@@ -124,7 +125,7 @@ SupRun.Platform.prototype.addEnemies = function(speed, player) {
             sprite.frameName = this.enemySprite + "walk_001.png";
           }, this);
           enemy.frameName = this.enemySprite + "walk_001.png";
-          //enemy.body.velocity.x = 0;
+          enemy.body.velocity.x = 0;
           enemy.scale.setTo(-1, 1);
         } else {
           enemy.reset(tile.x + enemiesX, 400);
@@ -191,7 +192,7 @@ SupRun.Platform.prototype.addLifeUps = function(speed) {
       } else {
         lifeUp.reset(tile.x, tile.y - lifeUpY);
       }
-      lifeUp.body.velocity.x = speed;
+      //lifeUp.body.velocity.x = speed;
       lifeUp.body.allowGravity = false;
     }
   }, this);

@@ -42,7 +42,7 @@ SupRun.GameState = {
     this.currentLevel = level || 'level1';
     this.bgSprite = bgSprite || 'background';
     this.enemySprite = enemySprite || 'knight_';
-    this.levelSpeed = levelSpeed || 700;
+    this.levelSpeed = levelSpeed || 300;
     this.maxLevelSpeed = 800;
 
     /* GAME COLLECTIBLES */
@@ -65,9 +65,12 @@ SupRun.GameState = {
     /* BACKGROUND */
     //create moving background
     this.background = this.add.tileSprite(0, 0, this.game.world.width, this.game.world.height, this.bgSprite);
-    this.background.autoScroll(-this.levelSpeed/6, 0);
+    //this.background.autoScroll(-this.levelSpeed/6, 0);
     this.game.world.sendToBack(this.background);
+    this.background.fixedToCamera = true;
     
+    /* CAMERA  */
+    this.game.camera.bounds = null;
     
     /* PLAYER */
     this.player = this.game.add.sprite(400, 300, 'player', 'medusa.png');
@@ -95,9 +98,10 @@ SupRun.GameState = {
     /* LIVES */
     this.playerLives = this.game.add.group();
     this.playerLives.createMultiple(this.myLivesLeft, 'heart', 0, true);
+    //this.playerLives.x = 200;
+    //this.playerLives.y = 24;
     this.playerLives.align(-1, 1, 86, 96, Phaser.RIGHT_CENTER, 0);
-    this.playerLives.x = 200;
-    this.playerLives.y = 24;
+    this.playerLives.fixedToCamera = true;
     // this.life1 = this.playerLives.create(200, 20, 'heart');
     // this.life2 = this.playerLives.create(20, 20, 'heart').alignTo(this.life1, Phaser.RIGHT_CENTER, -10);
     // this.life3 = this.playerLives.create(20, 20, 'heart').alignTo(this.life2, Phaser.RIGHT_CENTER, -10);
@@ -116,13 +120,15 @@ SupRun.GameState = {
     //show number of coins
     var style = {font: '30px Arial', fill: '#fff'};
     this.coinsCountIcon = this.game.add.sprite(22, 20, 'coin');
-    this.coinsCountLabel = this.add.text(80, 20, '0', style).alignTo(this.coinsCountIcon, Phaser.RIGHT_CENTER, 20);
+    this.coinsCountLabel = this.add.text(60, 20, '0', style).alignTo(this.coinsCountIcon, Phaser.RIGHT_CENTER, 20);
+    this.coinsCountIcon.fixedToCamera = true;
+    this.coinsCountLabel.fixedToCamera = true;
     
     /* LEVEL TIMER */
     this.nextLevelTimer = this.game.time.events.add(Phaser.Timer.SECOND * 20, this.nextLevel, this);
-    // this.speedUpTimer = this.game.time.create(false);
-    // this.speedUpTimer.loop(1500, this.goFaster, this);
-    // this.speedUpTimer.start();
+    this.speedUpTimer = this.game.time.create(false);
+    this.speedUpTimer.loop(1500, this.goFaster, this);
+    this.speedUpTimer.start();
     
     this.game.camera.flash(0xffffff, 1000);
   },   
@@ -130,10 +136,15 @@ SupRun.GameState = {
     
     /* COLLISION WITH POOLS */
     if (this.player.alive) {
-      console.log(this.player.x);
+      this.player.body.velocity.x = this.levelSpeed;
+      this.game.camera.x = this.player.x - 400;
+      this.updateLayers(this.game.camera.x);
       this.platformPool.forEachAlive(function(platform, index) {
         this.game.physics.arcade.collide(this.player, platform, this.hitWall, null, this);
-      
+        
+        this.projectilesPool.forEachAlive(function(projectile, index) {
+          this.game.physics.arcade.collide(projectile, platform, this.projectileSplat);
+        }, this);
         this.enemiesPool.forEachAlive(function(enemy, index) {
           this.game.physics.arcade.collide(enemy, platform);
         }, this);
@@ -141,7 +152,7 @@ SupRun.GameState = {
         // update floor tile speed constantly
         platform.forEach(function(floor) {
           
-          floor.body.velocity.x = -this.levelSpeed;
+          //floor.body.velocity.x = -this.levelSpeed;
         }, this);
         
         //check if platform needs to be killed
@@ -153,31 +164,31 @@ SupRun.GameState = {
       // update coin and life sprite speed constantly
       this.coinsPool.forEachAlive(function(coin) {
         this.checkCoinOverlap(this.player, coin);
-        coin.body.velocity.x = -this.levelSpeed;
+        //coin.body.velocity.x = -this.levelSpeed;
       }, this);
       
       this.lifePool.forEachAlive(function(life) {
         this.checkLifeOverlap(this.player, life);
-        life.body.velocity.x = -this.levelSpeed;
+        //life.body.velocity.x = -this.levelSpeed;
       }, this);
       
       //this.game.physics.arcade.overlap(this.player, this.coinsPool, this.collectCoin, null, this);
       //this.game.physics.arcade.overlap(this.player, this.lifePool, this.collectLife, null, this);
-      //this.game.physics.arcade.overlap(this.player, this.enemiesPool, this.hurtPlayer, null, this);
+      this.game.physics.arcade.overlap(this.player, this.enemiesPool, this.hurtPlayer, null, this);
       this.game.physics.arcade.collide(this.enemiesPool, this.projectilesPool, this.killEnemy, null, this);
       
       
       this.processDelayedEffects();
       
       /* ADJUST PLAYER POSITION */
-      if (!this.player.body.touching.down) {
-          this.player.body.velocity.x = 0;
-      }
+      // if (!this.player.body.touching.down) {
+      //     this.player.body.velocity.x = 0;
+      // }
       
       if (this.player.body.touching.down && !this.isHit && !this.isShooting) {
         this.isJumping = false;
         this.player.play('running');
-        this.player.body.velocity.x = this.levelSpeed;
+        //this.player.body.velocity.x = this.levelSpeed;
         //this.player.x = 400;
       }
       
@@ -197,24 +208,25 @@ SupRun.GameState = {
         //if shooting
         this.isShooting = false;
         this.isJumping = false;
-        this.player.body.velocity.x = this.levelSpeed;
+        //this.player.body.velocity.x = this.levelSpeed;
       } 
       
       /* CONTROLS */
-      if(this.cursors.up.isDown || this.game.input.activePointer.isDown){
+      if(this.cursors.up.isDown || this.game.input.activePointer.isDown) {
         this.playerJump();
       } else if (this.cursors.up.isUp || this.game.input.activePointer.isUp) {
         this.isJumping = false;
       }
-      if(this.spaceKey.isDown){
+      if(this.spaceKey.isDown) {
         this.shoot();
       }
 
       /* PLATFORM CREATION */
-      //if the last sprite in the platform group is showing, then create a new platform
-      //console.log(this.currentPlatform.children);
-      if(this.currentPlatform.length && this.currentPlatform.children[this.currentPlatform.length - 1].right < this.game.world.width) {
+      //if the last sprite in the platform group is in the camera, then create a new platform
+      //console.log(this.currentPlatform.children[0].inCamera);
+      if(this.currentPlatform.length && this.currentPlatform.children[this.currentPlatform.length - 1].inCamera) {
         this.createPlatform();
+        //this.currentPlatform.checked = true;
       }
       
       /* KILL SWITCH */
@@ -236,6 +248,7 @@ SupRun.GameState = {
     
     /* ALLOW ENEMIES TO REMAIN ON PLATFORMS AFTER DEATH  */
     this.platformPool.forEachAlive(function(platform, index){
+        this.game.physics.arcade.collide(this.player, platform);
         this.enemiesPool.forEachAlive(function(enemy, index){
           this.game.physics.arcade.collide(enemy, platform);
         }, this);
@@ -245,11 +258,13 @@ SupRun.GameState = {
     if(this.player.top >= this.game.world.height || this.player.left <= 0 || this.myLivesLeft <= 0) {
       //alpha doesn't work when bitmapData sprite is continuously redrawn
       //so only run gameOver once
-      this.player.play('dying');
-      this.playerLives.destroy(true, true);
-      //this.speedUpTimer.destroy();
-      this.nextLevelTimer.timer.destroy();
+      
       if(this.gameOverCounter <= 0) {
+        this.player.play('dying');
+        this.player.body.velocity.x = 0;
+        this.playerLives.destroy(true, true);
+        this.speedUpTimer.destroy();
+        this.nextLevelTimer.timer.destroy();
         this.gameOver();
         this.gameOverCounter++;
       }
@@ -274,7 +289,7 @@ SupRun.GameState = {
     this.coinsCountLabel.text = this.myCoins;
   },
   collectLife: function(player, life) {
-    console.log(this.myLivesLeft);
+    //console.log(this.myLivesLeft);
     life.kill();
     if (this.myLivesLeft < this.maxLives) {
       this.playerLives.create(this.playerLives.getChildAt(this.myLivesLeft - 1).x + 86, this.playerLives.getChildAt(this.myLivesLeft - 1).y, 'heart');
@@ -284,17 +299,22 @@ SupRun.GameState = {
       console.log("reached max lives");
     }
   },
-  createPlatform: function(){
+  createPlatform: function() {
     var nextPlatformData = this.generateRandomPlatform();
+    //separation between platforms should now be measured from the rightmost 
+    //pixel of the last tile of the current platform
+    var lastPlatform = this.currentPlatform.children[this.currentPlatform.length - 1].right;
+    //console.log(lastPlatform.width);
     
      if (nextPlatformData) {
        this.currentPlatform = this.platformPool.getFirstDead();
        if (!this.currentPlatform) {
          this.currentPlatform = new SupRun.Platform(this.game, this.floorPool, nextPlatformData.numTiles, 
-                                                 this.game.world.width + nextPlatformData.separation, nextPlatformData.y, -this.levelSpeed, this.coinsPool, this.enemiesPool, this.lifePool, this.enemySprite, this.player, false);
+                                                 lastPlatform + nextPlatformData.separation, nextPlatformData.y, -this.levelSpeed, this.coinsPool, this.enemiesPool, this.lifePool, this.enemySprite, this.player, false);
        } else {
-         this.currentPlatform.prepare(nextPlatformData.numTiles, this.game.world.width + nextPlatformData.separation, 
+        this.currentPlatform.prepare(nextPlatformData.numTiles, lastPlatform + nextPlatformData.separation, 
                                       nextPlatformData.y, -this.levelSpeed, this.coinsPool, this.enemiesPool, this.lifePool, this.enemySprite, this.player, false);
+        this.currentPlatform.checked = false;
        }
        
        this.platformPool.add(this.currentPlatform);
@@ -313,7 +333,9 @@ SupRun.GameState = {
     this.overlay.ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
     this.overlay.ctx.fillRect(0, 0, this.game.width, this.game.height);
     //sprite for the overlay
-    this.panel = this.game.add.sprite(0, this.game.height, this.overlay);
+    this.panel = this.game.add.sprite(this.game.camera.x, this.game.height, this.overlay);
+    //this.panel.fixedToCamera = true;
+    //console.log(this.panel);
     //this.panel.alpha = 0.55;
     
     
@@ -322,24 +344,26 @@ SupRun.GameState = {
     gameOverPanel.to({y: 0}, 500);
     
     //stop all movement after the overlay reaches the top
-    gameOverPanel.onComplete.add(function(){
+    gameOverPanel.onComplete.add(function() {
       this.background.stopScroll();
       
       //Add text to overlay
       
       //Game Over message
       var style = {font: '30px Arial', fill: '#fff'};
-      this.add.text(this.game.width/2, this.game.height/2, 'GAME OVER', style).anchor.setTo(0.5);
+      var middleOfCamera = this.game.camera.x + this.game.camera.x/2;
+      var gameOverText = this.add.text(middleOfCamera, this.game.height/2, 'GAME OVER', style).anchor.setTo(0.5);
+      //console.log(gameOverText);
       
       //High Score show
       style = {font: '20px Arial', fill: '#fff'};
-      this.add.text(this.game.width/2, this.game.height/2 + 50, 'High Score: ' + this.highScore, style).anchor.setTo(0.5);
+      this.add.text(middleOfCamera, this.game.height/2 + 50, 'High Score: ' + this.highScore, style).anchor.setTo(0.5);
       //Your Score show
       style = {font: '20px Arial', fill: '#fff'};
-      this.add.text(this.game.width/2, this.game.height/2 + 80, 'Your Score: ' + this.myCoins, style).anchor.setTo(0.5);
+      this.add.text(middleOfCamera, this.game.height/2 + 80, 'Your Score: ' + this.myCoins, style).anchor.setTo(0.5);
       //How to restart text
       style = {font: '14px Arial', fill: '#fff'};
-      this.add.text(this.game.width/2, this.game.height/2 + 120, 'Tap to Play Again', style).anchor.setTo(0.5);
+      this.add.text(middleOfCamera, this.game.height/2 + 120, 'Tap to Play Again', style).anchor.setTo(0.5);
       //Allow tap or click to restart
       this.game.input.onDown.addOnce(this.restart, this);
       
@@ -347,7 +371,7 @@ SupRun.GameState = {
     
     gameOverPanel.start();
   },
-  generateRandomPlatform: function(){
+  generateRandomPlatform: function() {
     var data = {};
     //generate separation/ distance from prev platform
     var minSeparation = 120;
@@ -373,10 +397,8 @@ SupRun.GameState = {
   },
   goFaster: function() {
     
-    if (this.levelSpeed < this.maxLevelSpeed) {
       console.log('speed it up!');
       this.levelSpeed += 10;
-    }
     // if (this.speedUpTimer.ms >= this.goFasterTime) {
       
     // }
@@ -425,8 +447,6 @@ SupRun.GameState = {
     } else if (enemy.body.touching.up) {
       enemy.kill();
     }
-    
-    
   },
   jumpAnimComplete: function(sprite, animation){
       //this.player.frameName = "medusa_run_001.png";
@@ -458,13 +478,13 @@ SupRun.GameState = {
       this.isJumping = true;
       this.player.play('jumping');
       this.jumpPeaked = false;
-      this.player.body.velocity.x = 0;
+      //this.player.body.velocity.x = 0;
       this.player.body.velocity.y = -400;
     } else if (this.isJumping && !this.jumpPeaked){
       var distanceJumped = this.startJumpY - this.player.y;
       if (distanceJumped <= this.maxJumpDistance) {
         this.player.play('jumping');
-        this.player.body.velocity.x = 0;
+        //this.player.body.velocity.x = 0;
         this.player.body.velocity.y = -400;
       } else {
         this.jumpPeaked = true;
@@ -481,10 +501,13 @@ SupRun.GameState = {
       this.canShoot = true;
     }
   },
+  projectileSplat: function(projectile, platform) {
+    projectile.kill();
+  },
   render: function() {
     
     //this.game.debug.body(this.player);
-    this.game.debug.bodyInfo(this.player, 0, 30);
+    //this.game.debug.bodyInfo(this.player, 0, 30);
     // this.platformPool.forEach(function(platform){
       
     //   platform.forEach(function(floor) {
@@ -500,7 +523,7 @@ SupRun.GameState = {
     // }, this);
   },
   restart: function() {
-    this.game.state.start('Game', true, false, '', 700, '', '', this.maxLives, 0);
+    this.game.state.start('Game', true, false, '', 300, '', '', this.maxLives, 0);
   },
   shoot: function() {
     if (this.canShoot) {
@@ -510,23 +533,23 @@ SupRun.GameState = {
             var projectile = this.projectilesPool.getFirstExists(false);
             if (!projectile) {
               projectile = this.projectilesPool.create(
-                  this.player.body.x + this.player.body.width  / 2,
-                  this.player.body.y + this.player.body.height / 2,
+                  this.player.body.x + this.player.body.width/2,
+                  this.player.body.y + this.player.body.height/2,
                   'poison');
             } else {
               projectile.reset(
-                this.player.body.x + this.player.body.width  / 2,
-                this.player.body.y + this.player.body.height / 2,
+                this.player.body.x + this.player.body.width/2,
+                this.player.body.y + this.player.body.height/2,
                 'poison');
             }
 
             this.game.physics.arcade.enable(projectile);
-            projectile.checkWorldBounds = true;
-            projectile.outOfBoundsKill = true;
+            //projectile.checkWorldBounds = true;
+            //projectile.outOfBoundsKill = true;
             projectile.anchor.setTo(0.5, 0.5);
             projectile.body.setSize(74, 44, 30, 10);
             projectile.allowGravity = false;
-            projectile.body.velocity.x = 1000;
+            projectile.body.velocity.x = 2000;
             this.player.play('attacking');
             //console.log(this.projectilesPool);
         }
@@ -551,4 +574,7 @@ SupRun.GameState = {
     }
     //console.log(this.highScore);
   },
+  updateLayers: function(cameraX) {
+    this.background.tilePosition.x = -cameraX * 0.5;
+  }
 }
