@@ -21,7 +21,6 @@ SupRun.Platform.prototype.constructor = SupRun.Platform;
 //create new method in order to reposition dead sprites as well as new sprites
 //speed passed here so that dead sprites can be revived with new speed
 SupRun.Platform.prototype.prepare = function(numTiles, x, y, speed, player) {
-  //console.log(x);
   this.alive = true;
   
   var i = 0;
@@ -33,7 +32,6 @@ SupRun.Platform.prototype.prepare = function(numTiles, x, y, speed, player) {
     } else {
       floorTile.reset(x + i * this.tileSize, y);
     }
-    //floorTile.body.checkCollision.left = true;
     this.add(floorTile);
     
     i++;
@@ -41,19 +39,16 @@ SupRun.Platform.prototype.prepare = function(numTiles, x, y, speed, player) {
   //set physics properties
   this.setAll('body.immovable', true);
   this.setAll('body.allowGravity', false);
-  //this.setAll('checkWorldBounds', true);
-  //this.setAll('body.velocity.x', speed);
   
-  this.addCoins(speed);
+  this.addCoins();
   this.addEnemies(speed, this.player);
-  this.addLifeUps(speed);
+  this.addLifeUps();
   
 };
 
 SupRun.Platform.prototype.update = function() {
   //Check distance of player from enemy
   this.enemiesPool.forEachAlive(function(enemy) {
-    //console.log('checking player distance');
     if (enemy.x <= this.player.x + 700 && !enemy.checked) {
       this.enemyMove(enemy, enemy.checked, this.speed);
     }
@@ -77,7 +72,7 @@ SupRun.Platform.prototype.kill = function() {
   }, this);
 };
 
-SupRun.Platform.prototype.addCoins = function(speed) {
+SupRun.Platform.prototype.addCoins = function() {
   //create coins in relation to tile position
   var coinsY = 90 + Math.random() * 110;
   var hasCoin;
@@ -90,12 +85,12 @@ SupRun.Platform.prototype.addCoins = function(speed) {
         coin = new Phaser.Sprite(this.game, tile.x, tile.y - coinsY, 'coin', 'coin_001.png');
         coin.animations.add('turning', Phaser.Animation.generateFrameNames('coin_', 1, 4, '.png', 3), 10, true, false);
         this.coinsPool.add(coin);
-        
       } else {
         coin.reset(tile.x, tile.y - coinsY);
       }
-      //coin.body.velocity.x = speed;
       coin.body.allowGravity = false;
+      //coin.anchor.setTo(0.5);
+      coin.body.setSize(56, 56, 20, 20);
       coin.play('turning');
     }
   }, this);
@@ -131,17 +126,11 @@ SupRun.Platform.prototype.addEnemies = function(speed, player) {
           enemy.reset(tile.x + enemiesX, 400);
           enemy.checked = false;
           enemy.animations.stop();
-          //enemy.body.velocity.x = 0;
           enemy.frameName = this.enemySprite + "walk_001.png";
         }
         enemy.direction = coinFlip === 0 ? 1 : -1;
         enemy.body.setSize(56, 90, 85, 62);
         enemy.anchor.setTo(0.5);
-        //console.log(enemy.body);
-        //enemy.body.checkCollision.left = false;
-        //enemy.body.checkCollision.right= false;
-        //enemy.body.allowGravity = false;
-        //enemy.body.gravity.x = 10;
         enemy.body.gravity.y = 5000;
       }
     }, this);
@@ -151,8 +140,6 @@ SupRun.Platform.prototype.addEnemies = function(speed, player) {
 SupRun.Platform.prototype.enemyMove = function(enemy, checked, speed) {
   if (!checked) {
     var coinFlip = Math.floor(Math.random() * (1 - 0 + 1)) + 0; 
-    //console.log(coinFlip)
-    //console.log(enemy.direction);
     //Choose whether or not enemy should move, and if so, in what direction
     if (coinFlip === 0) {
       if (enemy.direction === 1) {
@@ -170,13 +157,12 @@ SupRun.Platform.prototype.enemyMove = function(enemy, checked, speed) {
     } else {
       enemy.animations.stop();
       enemy.frameName = this.enemySprite + "walk_001.png";
-      //enemy.body.velocity.x = 0;
     }
     enemy.checked = true;
   }
 };
 
-SupRun.Platform.prototype.addLifeUps = function(speed) {
+SupRun.Platform.prototype.addLifeUps = function() {
   //create coins in relation to tile position
   var lifeUpY = 90 + Math.random() * 110;
   var hasLifeUp;
@@ -186,14 +172,14 @@ SupRun.Platform.prototype.addLifeUps = function(speed) {
     if (hasLifeUp) {
       var lifeUp = this.lifePool.getFirstExists(false);
       if (!lifeUp) {
-        lifeUp = new Phaser.Sprite(this.game, tile.x, tile.y - lifeUpY, 'heart');
+        lifeUp = new Phaser.Sprite(this.game, tile.x, tile.y - lifeUpY, 'lives', 'life.png');
         this.lifePool.add(lifeUp);
         
       } else {
         lifeUp.reset(tile.x, tile.y - lifeUpY);
       }
-      //lifeUp.body.velocity.x = speed;
       lifeUp.body.allowGravity = false;
+      lifeUp.body.setSize(60, 56, 0, 0);
     }
   }, this);
 };
