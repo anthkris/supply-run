@@ -7,7 +7,3 @@ You're a young apprentice in the kingdom of Anvilania. And you're excited about 
 
 ## Getting Onboard
 You're first task is simple... just collect a few items for the heroes... just a few hundred... thousand... We'll tell you when you're done.
-
-## To Do:
-
-- Organize code for better readability and maintenance
