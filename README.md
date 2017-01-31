@@ -2,8 +2,9 @@
 A tiny phaser game about collecting work supplies.
 
 ## Plot:
-Welcome to the Guild. Glad to have you with us.
-You're a young apprentice in the kingdom of Anvilania. And you're excited about your first day at work!
+A message from the Wizard:
 
-## Getting Onboard
-You're first task is simple... just collect a few items for the heroes... just a few hundred... thousand... We'll tell you when you're done.
+    Congratulations on joining the team. Glad to have you with us.
+    Your first mission is to help us get supplies by collecting coin.
+    I'll send you to town to collect some.
+    Just watch out for those pesky people. Not a friendly lot.
