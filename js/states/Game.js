@@ -43,7 +43,6 @@ SupRun.GameState = {
     this.bgGroup = bgGroup || ['village_fg', 'village_mg', 'village_bg'];
     this.enemySprite = enemySprite || 'knight_';
     this.levelSpeed = levelSpeed || 300;
-    //this.maxLevelSpeed = 800;
 
     /* GAME COLLECTIBLES */
     
@@ -122,6 +121,13 @@ SupRun.GameState = {
     this.playerLives.cameraOffset.x = 100;
     this.playerLives.cameraOffset.y = 20;
     
+    /* AUDIO BUTTON */
+		SupRun.game.audioButton = SupRun.game.add.button(540, 50, 'audioButton', SupRun.game.global.muteAudio, this, "audioOn.png", "audioOn.png", "audioOn.png", "audioOn.png");
+		SupRun.game.audioButton.anchor.setTo(0.5);
+		SupRun.game.audioButton.fixedToCamera = true;
+		SupRun.game.audioButton.cameraOffset.x = 60;
+		SupRun.game.audioButton.cameraOffset.y = this.game.world.height - 76;
+    
     /* COINS */
     this.coinContainer = this.game.add.sprite(14600, this.game.height - 100, 'cash', 'cash-container.png');
     this.coinContainer.fixedToCamera = true;
@@ -145,21 +151,30 @@ SupRun.GameState = {
 
     /* SOUNDS */
     this.coinSound = this.add.audio('coin');
+    this.lifeSound = this.add.audio('life');
+    this.hitSound = this.add.audio('hit');
+    this.jumpSound = this.add.audio('jump');
+    this.shootSound = this.add.audio('shootSound');
+    this.rumbleSound = this.add.audio('rumble');
     
     /* LEVEL TIMERS */
-    this.nextLevelTimer = this.game.time.events.add(Phaser.Timer.SECOND * 20, this.nextLevel, this);
+    this.nextLevelTimer = this.game.time.events.add(Phaser.Timer.SECOND * 50, this.nextLevel, this);
     this.speedUpTimer = this.game.time.create(false);
     this.speedUpTimer.loop(1500, this.goFaster, this);
     this.speedUpTimer.start();
+    this.nextLevelTimer.timer.start();
     
     /* TEXT */
     var style = {font: '30px Arial', fill: '#fff'};
-    
-    this.coinsCountLabel = this.add.bitmapText(60, 20, 'antiquaWhite', this.myCoins).alignTo(this.coinsCountIcon, Phaser.LEFT_TOP, 350);
+    this.coinsCountLabel = this.add.bitmapText(60, 20, 'antiquaWhite', this.myCoins + '');
+    this.coinsCountLabel.anchor.setTo(0.5);
     this.coinsCountLabel.fixedToCamera = true;
+    this.coinsCountLabel.cameraOffset.x = 1500;
+    this.coinsCountLabel.cameraOffset.y = this.game.height - 80;
     
-    this.countdownLabel = this.add.text(1800, 20, '0', style);
+    this.countdownLabel = this.add.bitmapText(1400, 20, 'antiquaWhite', 'Time until Transport: 0');
     this.countdownLabel.fixedToCamera = true;
+    this.countdownLabel.visible = false;
     
     
     
@@ -249,6 +264,14 @@ SupRun.GameState = {
         }
       }, this);
       
+      //kill lives that leave the screen
+      this.lifePool.forEachAlive(function(life) {
+        if (life.right <= this.game.camera.x) {
+          //console.log('killed life');
+          life.kill();
+        }
+      }, this);
+      
       //kill enemies that leave the screen
       this.enemiesPool.forEachAlive(function(enemy) {
         if (enemy.right <= this.game.camera.x || enemy.top >= this.game.world.height ) {
@@ -273,11 +296,12 @@ SupRun.GameState = {
       //so only run gameOver once
       
       if(this.gameOverCounter <= 0) {
+        this.hitSound.play();
         this.player.play('dying');
         this.player.body.velocity.x = 0;
         this.playerLives.destroy(true, true);
-        this.speedUpTimer.destroy();
-        this.nextLevelTimer.timer.destroy();
+        this.speedUpTimer.stop();
+        this.nextLevelTimer.timer.stop();
         this.gameOver();
         this.gameOverCounter++;
       }
@@ -285,12 +309,13 @@ SupRun.GameState = {
     }
   },
   checkCoinOverlap (player, coin) {
-    if (player.x > coin.left && coin.right > player.x && coin.bottom > player.y && player.y > coin.top) {
+    if (player.x + 30 > coin.left && coin.right > player.x - 30 && coin.bottom > player.y - 35 && player.y - 35 > coin.top) {
       this.collectCoin(player, coin);
     }
   },
   checkLifeOverlap (player, life) {
-    if (player.x > life.left &&  life.right > player.x && life.bottom > player.y && player.y > life.top) {
+    if (player.x + 30 > life.left &&  life.right > player.x - 30 && life.bottom > player.y - 35 && player.y - 35 > life.top) {
+      //console.log('overlap life');
       this.collectLife(player, life);
     }
   },
@@ -298,17 +323,18 @@ SupRun.GameState = {
     //kill coin, update coin count, and play sound
     coin.kill();
     this.myCoins++;
-    //this.coinSound.play();
+    this.coinSound.play();
     this.coinsCountLabel.text = this.myCoins;
   },
   collectLife: function(player, life) {
     life.kill();
+    this.lifeSound.play();
     if (this.myLivesLeft < this.maxLives) {
       this.playerLives.create(this.playerLives.getChildAt(this.myLivesLeft - 1).x + 86, this.playerLives.getChildAt(this.myLivesLeft - 1).y, 'lives', 'red-bar-full.png');
       this.myLivesLeft++;
-      console.log("gained a life! Now at " + this.myLivesLeft);
+      //console.log("gained a life! Now at " + this.myLivesLeft);
     } else {
-      console.log("reached max lives");
+      //console.log("reached max lives");
     }
   },
   createPlatform: function() {
@@ -367,20 +393,17 @@ SupRun.GameState = {
     return data;
   },
   goFaster: function() {
-      console.log('speed it up!');
+      //console.log('speed it up!');
       this.levelSpeed += 10;
   },
   hitAnimationLooped: function(sprite, animation) {
     this.isHit = false;
     this.canShoot = true;
     this.player.play('running');
-     if (animation.loopCount >= 1) {
-      
-    }
   },
   hitWall: function(player, floor) {
     if (floor.body.touching.left) {
-      console.log('hit floor');
+      //console.log('hit floor');
       player.play('dying');
       this.playerLives.destroy(true, true);
       player.body.gravity.y = 10000;
@@ -395,6 +418,7 @@ SupRun.GameState = {
     enemy.play('attacking');
     player.play('hit');
     if (enemy.body.touching.left && !enemy.body.touching.up) {
+      this.hitSound.play();
       this.canShoot = false;
       if (this.ghostUntil && this.ghostUntil > this.time.now) {
         return;
@@ -408,7 +432,7 @@ SupRun.GameState = {
         
         life.destroy();
         this.myLivesLeft--;
-        console.log("lost a life! Now at " + this.myLivesLeft);
+        //console.log("lost a life! Now at " + this.myLivesLeft);
       }
     } else if (enemy.body.touching.up) {
       enemy.kill();
@@ -422,7 +446,7 @@ SupRun.GameState = {
     this.createPlatform();
   },
   nextLevel: function() {
-    
+    this.rumbleSound.play();
     if (this.currentLevel === 'level1') {
       this.game.state.start('Game', true, false, 'level2', this.levelSpeed, ['mountains_fg', 'mountains_mg', 'mountains_bg'], 'dwarf_1_', this.myLivesLeft, this.myCoins);
     } else if (this.currentLevel === 'level2') {
@@ -440,11 +464,13 @@ SupRun.GameState = {
       this.player.play('jumping');
       this.jumpPeaked = false;
       this.player.body.velocity.y = -400;
+      this.jumpSound.play();
     } else if (this.isJumping && !this.jumpPeaked){
       var distanceJumped = this.startJumpY - this.player.y;
       if (distanceJumped <= this.maxJumpDistance) {
         this.player.play('jumping');
         this.player.body.velocity.y = -400;
+        this.jumpSound.play();
       } else {
         this.jumpPeaked = true;
       }
@@ -465,7 +491,7 @@ SupRun.GameState = {
   },
   render: function() {
     /* DEBUG PLAYER  */
-    this.game.debug.body(this.player);
+    // this.game.debug.body(this.player);
     //this.game.debug.bodyInfo(this.player, 0, 30);
     
     /* DEBUG PLATFORM  */
@@ -479,14 +505,14 @@ SupRun.GameState = {
     // }, this);
     
     /* DEBUG COINS */
-    this.coinsPool.forEach(function(coin) {
-      this.game.debug.body(coin);
-    }, this);
+    // this.coinsPool.forEach(function(coin) {
+    //   this.game.debug.body(coin);
+    // }, this);
     
     /* DEBUG LIVES */
-    this.lifePool.forEach(function(life) {
-      this.game.debug.body(life);
-    }, this);
+    // this.lifePool.forEach(function(life) {
+    //   this.game.debug.body(life);
+    // }, this);
       
     /* DEBUG ENEMIES */
     // this.enemiesPool.forEach(function(enemy){
@@ -523,6 +549,7 @@ SupRun.GameState = {
             projectile.allowGravity = false;
             projectile.body.velocity.x = 2000;
             this.player.play('attacking');
+            this.shootSound.play();
             //console.log(this.projectilesPool);
         }
     }
@@ -532,7 +559,12 @@ SupRun.GameState = {
     this.player.play('running');
   },
   timeToTransport: function (nextLevelTimerDuration) {
-    this.countdownLabel.text =  parseInt(nextLevelTimerDuration / 1000);
+    var secondsToNextLevel = parseInt(nextLevelTimerDuration / 1000);
+    if ( secondsToNextLevel <= 20 ) {
+      this.countdownLabel.visible = true;
+      this.countdownLabel.text =  'Time until Transport: ' + secondsToNextLevel;
+    }
+    
   },
   updateHighScore: function() {
     //read from storage first
